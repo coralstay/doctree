@@ -1,0 +1,52 @@
+# 프로젝트 유형별 디렉토리 및 파일 구조 규격 정의서
+schema_version: 1
+
+profiles:
+  # handcrafted 최상위 디렉토리는 아래 6개만 생성한다 (기준 모델: handcrafted-cpp).
+  # 도서는 contents/<도서명>/ 아래에 위치하며, content_data/·practice/는 같은 <도서명>를 1:1 미러링한다.
+  # 분류 트리(category_tree.yaml)는 handcrafted 프로젝트의 디렉토리 구조 기준이 아니다.
+  # 이 목록 외의 디렉토리는 사용자의 명시적 지시가 있을 때까지 생성·삭제·이동하지 않는다.
+  handcrafted:
+    content_dir: "contents"
+    content_data_dir: "content_data"
+    practice_dir: "practice"
+    directories:
+      - "content_data"
+      - "contents"
+      - "practice"
+      - "scripts"
+      - "tips"
+      - ".opensource"
+    required_files:
+      - ".gitignore"
+      - "README.md"
+      - "PROJECT_STRUCTURE.md"
+      - "PRACTICE_GUIDE.md"
+      - "scripts/run.sh"
+      - "scripts/test.sh"
+      - "scripts/reset.sh"
+      - "scripts/locate.sh"
+      - "scripts/snippets.sh"
+      - "scripts/help.sh"
+    gitignore_entries:
+      - "/contents/"
+      - "/content_data/"
+      - "practice/**/README.md"
+      - "practice/**/assets/"
+      - "practice/**/.skeleton/"
+
+  toolchain:
+    content_dir: "contents"
+    content_data_dir: "content_data"
+    directories:
+      - "contents"
+      - "docs"
+      - "scripts"
+      - "spec"
+    required_files:
+      - ".gitignore"
+      - "README.md"
+      - "install.sh"
+      - "uninstall.sh"
+    gitignore_entries:
+      - "/contents/"

@@ -1,0 +1,95 @@
+# Google Drive API v3 (about.get 및 files.list 페이지네이션·폴더 트리) 카세트 명세
+# Boundary 1 (외부 API 경계): 실제 Google Drive REST 응답 페이로드 구조를 선언적으로 명세한다.
+schema_version: 1
+
+about_get_responses:
+  standard_100gb_user:
+    user:
+      displayName: "coralstay Tester"
+      emailAddress: "coralstay@example.com"
+      photoLink: "https://example.com/photo.png"
+    storageQuota:
+      limit: "107374182400"        # 100.0 GB
+      usage: "26843545600"         # 25.0 GB (25.0%)
+      usageInDrive: "21474836480"  # 20.0 GB
+      usageInDriveTrash: "0"
+    expected_parsed:
+      name: "coralstay Tester"
+      email: "coralstay@example.com"
+      limit_gb: 100.0
+      usage_gb: 25.0
+      drive_usage_gb: 20.0
+      usage_percent: 25.0
+
+  unlimited_workspace_user:
+    user:
+      displayName: "Enterprise Org"
+      emailAddress: "org@example.com"
+    storageQuota:
+      usage: "53687091200"         # 50.0 GB (limit 필드 없음)
+      usageInDrive: "42949672960"  # 40.0 GB
+    expected_parsed:
+      name: "Enterprise Org"
+      email: "org@example.com"
+      limit_gb: null
+      usage_gb: 50.0
+      drive_usage_gb: 40.0
+      usage_percent: 0.0
+
+files_list_paginated_cassette:
+  pages:
+    - nextPageToken: "page_token_2"
+      files:
+        - id: "folder_root_books"
+          name: "기술서적"
+          mimeType: "application/vnd.google-apps.folder"
+          parents: ["drive_root"]
+        - id: "folder_cs"
+          name: "컴퓨터과학"
+          mimeType: "application/vnd.google-apps.folder"
+          parents: ["folder_root_books"]
+        - id: "folder_fake_pdf"
+          name: "폴더지만확장자가.pdf"
+          mimeType: "application/vnd.google-apps.folder"
+          parents: ["folder_root_books"]
+        - id: "book_nfd_korean"
+          # NFD 자모 분리된 '친절한-SQL-튜닝.pdf' -> NFC로 정규화되어야 함
+          name: "\u110e\u1175\u11ab\u110c\u1165\u11af\u1112\u1161\u11ab-SQL.pdf"
+          mimeType: "application/pdf"
+          parents: ["folder_cs"]
+          size: "1048576"
+          sha256Checksum: "aaaa1111bbbb2222cccc3333dddd4444eeee5555ffff6666aaaa1111bbbb2222"
+          modifiedTime: "2026-10-26T09:00:00.000Z"
+          webViewLink: "https://drive.google.com/file/d/book_nfd_korean/view"
+    - nextPageToken: null
+      files:
+        - id: "book_slash_in_title"
+          name: "A/B 테스트 실전 가이드"
+          mimeType: "application/pdf"
+          parents: ["folder_cs"]
+          size: "2097152"
+          sha256Checksum: "1111222233334444555566667777888899990000aaaabbbbccccddddeeeeffff"
+          modifiedTime: "2026-10-27T10:00:00.000Z"
+          webViewLink: "https://drive.google.com/file/d/book_slash_in_title/view"
+        - id: "non_pdf_epub"
+          name: "이건전자책.epub"
+          mimeType: "application/epub+zip"
+          parents: ["folder_cs"]
+          size: "50000"
+        - id: "outside_subtree_pdf"
+          name: "외부폴더문서.pdf"
+          mimeType: "application/pdf"
+          parents: ["other_untracked_folder"]
+          size: "1024"
+
+  expected_subtree_records_for_folder_root_books:
+    - id: "book_slash_in_title"
+      name: "A/B 테스트 실전 가이드"
+      folder_path: "컴퓨터과학"
+      size_bytes: 2097152
+      sha256: "1111222233334444555566667777888899990000aaaabbbbccccddddeeeeffff"
+    - id: "book_nfd_korean"
+      name: "친절한-SQL.pdf"
+      folder_path: "컴퓨터과학"
+      size_bytes: 1048576
+      sha256: "aaaa1111bbbb2222cccc3333dddd4444eeee5555ffff6666aaaa1111bbbb2222"

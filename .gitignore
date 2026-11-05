@@ -1,0 +1,42 @@
+# Secrets
+.env
+credentials.json
+token.json
+client_secret*.json
+.drive_sync_token
+.vt_cache.json
+.local_contents_cache.json
+
+# Python & Packaging Build Artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+build/
+dist/
+
+# Test & Coverage Artifacts
+.pytest_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+
+# Snapshots (스냅샷 산출물은 커밋하지 않음)
+snapshots/
+
+# Legacy pipeline data / test output
+data/
+tmp_output/
+
+# IDE / OS
+.idea/
+.DS_Store
+
+# 공개 저장소 제외 (TASK-16, 2026-10-31)
+*.pdf
+*.epub
+.opensource/
+
+# 개인 Drive file_id·서재 목록 (TASK-18, 2026-11-01) — 로컬 전용, 스키마는 config/content_category_map.example.yaml 참고
+config/content_category_map.yaml

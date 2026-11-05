@@ -1,0 +1,35 @@
+# VirusTotal API v3 HTTP 통신 카세트 명세
+# 로컬 루프백 TCP HTTP 서버(127.0.0.1) 통합 테스트가 이 명세를 로드하여 실제 소켓 응답으로 재생한다.
+schema_version: 1
+endpoints:
+  virustotal_v3:
+    path_prefix: "/vt/files/"
+    required_header:
+      name: "x-apikey"
+      value: "real-vt-key"
+    unauthorized_status: 401
+    responses:
+      clean:
+        status: 200
+        body:
+          data:
+            attributes:
+              last_analysis_stats:
+                malicious: 0
+                suspicious: 0
+                harmless: 71
+                undetected: 2
+      malicious:
+        status: 200
+        body:
+          data:
+            attributes:
+              last_analysis_stats:
+                malicious: 9
+                suspicious: 2
+                harmless: 50
+                undetected: 5
+      rate_limited:
+        status: 429
+      not_found:
+        status: 404

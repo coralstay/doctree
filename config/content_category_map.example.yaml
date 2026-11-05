@@ -1,0 +1,14 @@
+# Example only: copy to config/content_category_map.yaml (gitignored) and replace with your own Drive file IDs.
+# Assign each Drive file ID to one existing subcategory ID.
+# Titles are for reference; renaming or moving a Drive file does not change its assignment.
+schema_version: 1
+contents:
+  - file_id: "1AbCdEfGhIjKlMnOpQrStUvWxYz012345"
+    title: "A Tour of C++"
+    category_id: "languages.c-cpp"
+  - file_id: "1ZyXwVuTsRqPoNmLkJiHgFeDcBa543210"
+    title: "친절한 SQL 튜닝"
+    category_id: "databases.oracle-tuning"
+  - file_id: "1ExAmPlEfAkEdRiVeFiLeId0000000000"
+    title: "Code Complete 2"
+    category_id: "software.clean-code"

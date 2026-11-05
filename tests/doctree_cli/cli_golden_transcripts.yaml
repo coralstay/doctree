@@ -1,0 +1,125 @@
+# CLI 종단간(E2E) 골든 트랜스크립트(Golden Transcript) 명세
+# Boundary 4 (터미널 CLI 입출력 경계): 실제 .venv/bin/doctree 바이너리의 전 서브커맨드(help, auth, status, classify, audit, update) 입출력을 정의한다.
+schema_version: 1
+transcripts:
+  version_flag:
+    command: ["--version"]
+    exit_code: 0
+    expected_stdout_contains:
+      - "doctree 0.1.0"
+
+  help_all_commands:
+    command: ["--help"]
+    exit_code: 0
+    expected_stdout_contains:
+      - "usage: doctree"
+      - "help"
+      - "auth"
+      - "status"
+      - "classify"
+      - "update"
+      - "audit"
+      - "layout"
+      - "sync"
+      - "pull"
+      - "scaffold"
+      - "parse"
+      - "practice"
+      - "[1] 스냅샷 · 분류 · 보안 감사 · 레이아웃 기본 워크플로"
+      - "[2] Step 1~4 로컬 학습 프로젝트 파이프라인 워크플로"
+      - "[3] 핵심 설정 파일 및 산출물 경로"
+
+  help_subcommand_topic:
+    command: ["help", "update"]
+    exit_code: 0
+    expected_stdout_contains:
+      - "usage: doctree update"
+      - "--strict"
+      - "사용 예시:"
+
+  auth_without_credentials:
+    command: ["auth"]
+    exit_code: 1
+    expected_stdout_contains:
+      - "🔑 Google Drive OAuth 2.0 인증"
+      - "❌ 구글 드라이브 인증에 실패했거나 credentials.json / token.json이 없습니다."
+
+  status_without_credentials:
+    command: ["status"]
+    exit_code: 1
+    expected_stdout_contains:
+      - "📊 Google Drive 계정 상태"
+      - "❌ 구글 드라이브 인증에 실패했거나 credentials.json / token.json이 없습니다."
+
+  classify_strict_clean:
+    command: ["classify", "--strict"]
+    exit_code: 0
+    expected_stdout_contains:
+      - "파일 1개 · 분류 1권 · 미분류 0권"
+      - "├── 5. 데이터베이스"
+      - "│   ├── SQL 튜닝·Oracle (1)"
+      - "│   │   └── 친절한 SQL 튜닝.pdf"
+      - "[미분류·검토 대기]"
+      - "미분류 콘텐츠가 없습니다."
+
+  classify_non_strict_unclassified_review:
+    command: ["classify", "--snapshot", "{unclassified_snapshot}"]
+    exit_code: 0
+    expected_stdout_contains:
+      - "파일 2개 · 분류 1권 · 미분류 1권"
+      - "[미분류·검토 대기]"
+      - "- 미등록신규도서.pdf (id=unregistered-999, path=신규폴더/미등록신규도서.pdf)"
+
+  classify_strict_unclassified_rejected:
+    command: ["classify", "--strict", "--snapshot", "{unclassified_snapshot}"]
+    exit_code: 1
+    expected_stdout_contains:
+      - "분류 검증 실패: 미분류 콘텐츠 1권: 'unregistered-999'"
+
+  audit_strict_clean:
+    command: ["audit", "--strict"]
+    exit_code: 0
+    expected_stdout_contains:
+      - "🛡️ 보안 점검 요약: 드라이브 스냅샷 1권(VT 조회 1건, 위협 0건) · 로컬 PDF 1개(주의/위협 0개)"
+
+  audit_strict_infected_pdf:
+    command: ["audit", "--strict"]
+    exit_code: 1
+    expected_stdout_contains:
+      - "🛡️ 보안 점검 요약: 드라이브 스냅샷 1권(VT 조회 1건, 위협 0건) · 로컬 PDF 2개(주의/위협 1개)"
+      - "[로컬 PDF 주의]"
+      - "위험 태그: /JavaScript"
+
+  update_without_credentials_preserves_snapshot:
+    command: ["update"]
+    exit_code: 1
+    expected_stdout_contains:
+      - "구글 드라이브 인증에 실패했거나 credentials.json / token.json이 없습니다."
+      - "기존 스냅샷은 그대로 두었습니다."
+
+  sync_3way_comparison:
+    command: ["sync"]
+    exit_code: 0
+    expected_stdout_contains:
+      - "🔄 3-Way 동기화 현황: 드라이브 스냅샷 1권 · 로컬 1개"
+      - "양쪽 일치 1권 · 드라이브 전용 0권 · 로컬 전용 0개"
+      - "[양쪽 일치 (Matched: 1권)]"
+
+  scaffold_handcrafted_project:
+    command: ["scaffold", "handcrafted", "{scaffold_target}"]
+    exit_code: 0
+    expected_stdout_contains:
+      - "🏗️ 프로젝트 스캐폴딩 완료:"
+      - "프로필: handcrafted"
+
+  parse_verify_pdf:
+    command: ["parse", "{clean_pdf}", "--verify", "--strict"]
+    exit_code: 0
+    expected_stdout_contains:
+      - "📄 PDF 파싱 완료: 친절한-SQL-튜닝 (총 1페이지 · PASS 1 · WARN 0"
+
+  practice_generate_katas:
+    command: ["practice", "{parsed_book_dir}"]
+    exit_code: 0
+    expected_stdout_contains:
+      - "🎯 실습(Kata) 생성 완료: 친절한-SQL-튜닝"

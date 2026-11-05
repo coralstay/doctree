@@ -1,0 +1,5 @@
+python 3.12.13
+uv 0.12.9
+# @oss python  ruff             0.16.5
+# @oss python  vulture          v2.16
+# @oss core    Backlog.md       v1.55.3

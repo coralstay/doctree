@@ -1,0 +1,95 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "doctree"
+version = "0.1.0"
+description = "구글 드라이브 및 로컬 콘텐츠(contents) PDF 스냅샷·분류·레이아웃 규격·보안 감사 CLI"
+readme = "README.md"
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
+authors = [{ name = "coralstay" }]
+requires-python = ">=3.11"
+dependencies = [
+    "google-api-python-client>=2.0.0",
+    "google-auth-httplib2>=0.1.0",
+    "google-auth-oauthlib>=1.0.0",
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "coverage>=7.0.0",
+    "pytest-bdd>=8.0.0",
+    "pytest-html>=4.0.0",
+    "hypothesis>=6.0.0",
+    "ruff>=0.8.0",
+    "vulture>=2.14",
+]
+
+[project.scripts]
+doctree = "doctree.doctree_cli.command_dispatcher:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "unit: 단일 모듈·함수의 오프라인 단위 테스트",
+    "integration: 로컬 TCP HTTP 서버·파일시스템·다중 도메인 모듈 간 통합 테스트",
+    "e2e: 실제 CLI 바이너리(.venv/bin/doctree) 서브프로세스 블랙박스 종단간(End-to-End) 테스트",
+]
+
+[tool.coverage.run]
+source = ["doctree"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 100
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "\\.\\.\\.",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "SIM", "ERA", "PIE", "ARG", "UP", "C4", "C901", "PLR0912", "PLR0913", "PLR0915", "RET", "RUF", "I", "SLF", "PERF", "FURB"]
+ignore = ["E501", "RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 7
+
+[tool.ruff.lint.pylint]
+max-args = 7
+max-branches = 7
+max-statements = 50
+
+[tool.vulture]
+paths = ["src/doctree", "tests"]
+min_confidence = 60
+ignore_decorators = ["@given", "@when", "@then", "@initialize", "@rule", "@invariant"]
+ignore_names = [
+    "__dir__",
+    "__getattr__",
+    "construct_mapping",
+    "do_GET",
+    "log_message",
+    "message",
+    "modified_time",
+    "teardown",
+    "web_view_link",
+    "help",
+]
