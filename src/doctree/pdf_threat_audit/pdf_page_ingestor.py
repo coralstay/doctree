@@ -1,3 +1,12 @@
+# ---
+# title: pdf_page_ingestor
+# description: PDF를 페이지별로 파싱해 content_data로 만들고 원본과의 동일성을 기계 검증한다 (폐기된 PDF 파이프라인 잔재)
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """페이지별 PDF 파싱(텍스트·코드·크롭 PNG·Graphviz DOT SVG) 및 원본 PDF ⟷ content_data/ 5대 동일성 기계 검증 파이프라인 (Step 3: doctree parse)."""
 from __future__ import annotations
 

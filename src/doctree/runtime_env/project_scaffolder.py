@@ -1,3 +1,12 @@
+# ---
+# title: project_scaffolder
+# description: 프로젝트 디렉토리·필수 파일·실행 스크립트·gitignore 구조를 강제로 생성한다 (폐기된 PDF 파이프라인 잔재)
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """로컬 워크스페이스 프로젝트 디렉토리·필수 파일·실행 스크립트·gitignore 구조 강제 생성기 (Step 2: doctree scaffold)."""
 from __future__ import annotations
 

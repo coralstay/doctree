@@ -1,3 +1,12 @@
+# ---
+# title: category_classifier
+# description: 고정 분류 트리를 검증하고 드라이브 파일 ID 배정표로 파일을 분류한다
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """Validate the fixed taxonomy and classify Drive files by their persistent IDs.
 
 Names and folder paths are metadata only. A file receives a category exclusively

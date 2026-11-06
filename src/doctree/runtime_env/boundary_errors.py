@@ -1,3 +1,12 @@
+# ---
+# title: boundary_errors
+# description: 외부 입출력·런타임 경계의 통합 예외 계층과 HTTP GET 핸들러
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """외부 입출력·런타임 경계 통합 예외 계층 및 HTTP GET 핸들러."""
 from __future__ import annotations
 

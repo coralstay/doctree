@@ -1,3 +1,12 @@
+# ---
+# title: drive_pdf_fetcher
+# description: 구글 드라이브 API v3로 PDF 메타데이터(SHA-256 포함)를 수집한다
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """구글 드라이브 API v3 연동 및 PDF 메타데이터(SHA-256 포함) 수집기."""
 from __future__ import annotations
 

@@ -1,3 +1,12 @@
+# ---
+# title: doctree_cli/__init__
+# description: doctree_cli 도메인의 공개 API를 지연 import로 노출하는 패키지 초기화
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """doctree_cli 도메인: CLI 명령어 디스패처 및 터미널 트리 렌더러."""
 from __future__ import annotations
 

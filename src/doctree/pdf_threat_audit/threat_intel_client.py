@@ -1,3 +1,12 @@
+# ---
+# title: threat_intel_client
+# description: 해시 평판 조회 클라이언트(VirusTotal v3)와 로컬 캐시
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """위협 인텔리전스 해시 평판 조회 클라이언트(ThreatIntelProvider Protocol · VirusTotal v3) 및 로컬 캐시."""
 from __future__ import annotations
 

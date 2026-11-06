@@ -1,3 +1,12 @@
+# ---
+# title: test_layout_profile_store
+# description: 레이아웃 프로필 저장소와 doctree layout 명령의 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """프로젝트 레이아웃 프로필 저장소(layout_profile_store.py) 및 `doctree layout` CLI 입출력 단위·통합 테스트."""
 from __future__ import annotations
 

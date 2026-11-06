@@ -1,3 +1,12 @@
+# ---
+# title: command_dispatcher
+# description: 'doctree CLI의 명령어 파서와 디스패처: 드라이브 스냅샷·분류·레이아웃·감사 명령을 실행한다'
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """doctree: 구글 드라이브 콘텐츠(contents) PDF 스냅샷, 분류, 레이아웃 규격 및 보안 감사 관리 CLI."""
 from __future__ import annotations
 

@@ -1,3 +1,12 @@
+# ---
+# title: layout_profile_store
+# description: 프로젝트 레이아웃 프로필 YAML의 스키마 검증과 원자적 입출력 저장소
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """프로젝트 레이아웃 프로필(config/project_layout_profiles.yaml) 스키마 검증, 공통 YAML 검증기 및 원자적 입출력 저장소."""
 from __future__ import annotations
 

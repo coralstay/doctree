@@ -1,3 +1,12 @@
+# ---
+# title: terminal_tree_renderer
+# description: 분류 트리와 드라이브 스토리지 현황을 터미널(Rich)에 그리는 렌더러
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """터미널 분류 트리 포맷터 및 구글 드라이브 스토리지 Rich 대시보드 렌더러."""
 from __future__ import annotations
 

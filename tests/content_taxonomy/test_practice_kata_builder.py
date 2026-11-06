@@ -1,3 +1,12 @@
+# ---
+# title: test_practice_kata_builder
+# description: 실습 프레임워크 빌더와 doctree practice 명령의 테스트 (폐기된 파이프라인)
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """중간 결과물(content_data/) 기반 실습·테스트 프레임워크 빌더(practice_kata_builder.py) 및 `doctree practice` CLI 테스트."""
 from __future__ import annotations
 

@@ -1,3 +1,12 @@
+# ---
+# title: test_drive_pdf_fetcher
+# description: 드라이브 PDF 메타데이터 수집기의 단위·통합 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 import os
 import shutil
 import tempfile

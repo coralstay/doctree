@@ -1,3 +1,12 @@
+# ---
+# title: snippet_registry
+# description: 실습 코드의 snippet 표식을 추출하고 SHA-256 검증 레지스트리와 마크다운·블로그 내보내기를 제공한다
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """실습 코드(practice/) 내 [[snippet]] / @snippet 추출, SHA-256 인간 검증 레지스트리 및 마크다운·블로그 내보내기 엔진."""
 from __future__ import annotations
 

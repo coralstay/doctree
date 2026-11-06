@@ -1,3 +1,12 @@
+# ---
+# title: pdf_threat_audit/__init__
+# description: pdf_threat_audit 도메인의 공개 API를 지연 import로 노출하는 패키지 초기화 (폐기된 PDF 파이프라인 포함)
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """pdf_threat_audit 도메인: 로컬 PDF 바이트 검사기, 페이지별 파서 및 VirusTotal 위협 감사 클라이언트."""
 from __future__ import annotations
 

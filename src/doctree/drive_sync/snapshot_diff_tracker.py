@@ -1,3 +1,12 @@
+# ---
+# title: snapshot_diff_tracker
+# description: 드라이브 목록 스냅샷을 저장하고 직전 스냅샷과 비교한다
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """목록 스냅샷 저장과 직전 스냅샷 비교 (KBI-4).
 
 snapshots/

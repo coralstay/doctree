@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
-# doctree CLI 전역 심볼릭 링크 제거 스크립트
+# ---
+# title: uninstall
+# description: doctree CLI 전역 심볼릭 링크를 제거하는 스크립트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 set -euo pipefail
 
 BIN_DIR="${DOCTREE_BIN_DIR:-${HOME}/.local/bin}"

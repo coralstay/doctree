@@ -1,3 +1,12 @@
+# ---
+# title: pdf_byte_inspector
+# description: '로컬 PDF의 정적 무결성과 위험 태그(/JavaScript, /Launch 등)를 바이트 수준으로 검사한다'
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """로컬 PDF 정적 무결성 및 위험 태그(/JavaScript, /Launch 등) 바이트 검사기."""
 from __future__ import annotations
 

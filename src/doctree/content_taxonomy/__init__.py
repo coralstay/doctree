@@ -1,3 +1,12 @@
+# ---
+# title: content_taxonomy/__init__
+# description: content_taxonomy 도메인의 공개 API를 지연 import로 노출하는 패키지 초기화
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """content_taxonomy 도메인: 고정 분류 트리 검증, 중복·파일명 린터 및 실습 Kata 빌더."""
 from __future__ import annotations
 

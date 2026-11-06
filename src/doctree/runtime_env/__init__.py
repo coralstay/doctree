@@ -1,3 +1,12 @@
+# ---
+# title: runtime_env/__init__
+# description: runtime_env 도메인의 공개 API를 지연 import로 노출하는 패키지 초기화
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """runtime_env 도메인: 런타임 환경 변수·경로 설정, 레이아웃 프로필 저장소, 스캐폴더 및 경계 예외 계층."""
 from __future__ import annotations
 

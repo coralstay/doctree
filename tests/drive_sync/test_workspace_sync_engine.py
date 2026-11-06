@@ -1,3 +1,12 @@
+# ---
+# title: test_workspace_sync_engine
+# description: 드라이브와 로컬 contents/ 3-Way 비교 및 pull 동기화 엔진의 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """드라이브 ⟷ 로컬 contents/ 고속 스캔·3-Way 비교 및 도서 가져오기(pull) 엔진(workspace_sync_engine.py) 단위·통합 테스트."""
 from __future__ import annotations
 

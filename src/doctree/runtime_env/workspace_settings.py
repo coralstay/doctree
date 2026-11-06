@@ -1,3 +1,12 @@
+# ---
+# title: workspace_settings
+# description: '환경 변수와 워크스페이스 경로 설정, 공통 파일시스템·프로세스 유틸리티'
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """런타임 환경 변수, 워크스페이스 경로 설정 및 공통 파일시스템·프로세스 기반 유틸리티."""
 from __future__ import annotations
 

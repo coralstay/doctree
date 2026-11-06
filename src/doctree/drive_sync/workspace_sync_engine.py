@@ -1,3 +1,12 @@
+# ---
+# title: workspace_sync_engine
+# description: 드라이브 스냅샷과 로컬 contents/ 를 SHA-256으로 3-Way 비교하고 도서를 가져오는(pull) 동기화 엔진
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """구글 드라이브 스냅샷(SHA-256) ⟷ 로컬 워크스페이스 contents/(SHA-256) 고속 스캔·3-Way 비교 및 도서 가져오기(pull) 엔진."""
 from __future__ import annotations
 

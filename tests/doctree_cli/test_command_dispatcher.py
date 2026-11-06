@@ -1,3 +1,12 @@
+# ---
+# title: test_command_dispatcher
+# description: doctree CLI 명령(auth·status·update·classify·audit 등)의 통합 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """doctree CLI (src.doctree_cli.command_dispatcher) 통합 검증: auth, status, update, classify, audit."""
 import contextlib
 import io

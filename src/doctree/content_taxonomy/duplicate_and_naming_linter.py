@@ -1,3 +1,12 @@
+# ---
+# title: duplicate_and_naming_linter
+# description: 드라이브 정리용 중복 파일과 파일명 규칙 위반을 경고로 점검한다
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """드라이브 정리용 점검: 중복·파일명 경고 (KBI-5).
 
 모든 점검은 레코드 목록만 읽는 순수 함수다. 드라이브 API를 호출하지 않고,

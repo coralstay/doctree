@@ -1,3 +1,12 @@
+# ---
+# title: test_boundary_errors
+# description: 경계 예외 계층과 시간대·유니코드·터미널 폭 등 추가 경계의 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """전 경계면 통합 예외 계층(boundary_errors) 및 추가 5대 경계(⑤ 시간대 · ⑥ 유니코드 NFD/NFC · ⑦ 런타임/패키징 · ⑧ 실제 저장소 데이터 계약 · ⑨ 터미널 폭) 검증."""
 from __future__ import annotations
 

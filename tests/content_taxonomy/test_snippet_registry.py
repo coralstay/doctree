@@ -1,3 +1,12 @@
+# ---
+# title: test_snippet_registry
+# description: snippet 추출·검증 레지스트리·마크다운 내보내기의 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """[[snippet]] / @snippet 추출, SHA-256 인간 검증 레지스트리 및 마크다운·블로그 내보내기(snippet_registry.py) 테스트."""
 from __future__ import annotations
 

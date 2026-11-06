@@ -1,3 +1,12 @@
+# ---
+# title: test_snapshot_diff_tracker
+# description: 스냅샷 저장과 직전 스냅샷 비교의 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """스냅샷 저장과 직전 스냅샷 비교 검증."""
 import json
 import shutil

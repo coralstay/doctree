@@ -1,3 +1,12 @@
+# ---
+# title: practice_kata_builder
+# description: content_data 중간 결과물에서 실습·테스트 프레임워크(practice/)를 생성한다 (폐기된 PDF 파이프라인 잔재)
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """중간 결과물(content_data/<도서명>/*page.md)을 장·절·주제별로 묶어 실습·테스트 프레임워크(practice/)를 생성하는 빌더 (Step 4: doctree practice)."""
 from __future__ import annotations
 

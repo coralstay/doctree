@@ -1,3 +1,12 @@
+# ---
+# title: test_pdf_byte_inspector
+# description: PDF 바이트 검사기(위험 태그·무결성)의 단위 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """로컬 PDF 바이트 정적 무결성 및 위험 태그 검사기(doctree.pdf_threat_audit.pdf_byte_inspector) 단위 테스트."""
 import dataclasses
 import hashlib

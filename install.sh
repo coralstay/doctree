@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
-# doctree CLI 전역 설치 스크립트 (.venv 패키지 설치 + ~/.local/bin/doctree 심볼릭 링크 등록)
+# ---
+# title: install
+# description: 'doctree CLI 전역 설치 스크립트: .venv에 패키지를 설치하고 ~/.local/bin/doctree 링크를 등록한다'
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

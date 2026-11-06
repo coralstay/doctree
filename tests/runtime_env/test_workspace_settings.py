@@ -1,3 +1,12 @@
+# ---
+# title: test_workspace_settings
+# description: 런타임 환경 설정과 프로젝트 대칭 구조·스냅샷 격리의 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """런타임 환경 설정(doctree.runtime_env.workspace_settings) 및 프로젝트 대칭 구조·스냅샷 격리 검증."""
 import ast
 import dataclasses
