@@ -69,6 +69,11 @@ src = ["src", "tests"]
 select = ["E", "F", "W", "B", "SIM", "ERA", "PIE", "ARG", "UP", "C4", "C901", "PLR0912", "PLR0913", "PLR0915", "RET", "RUF", "I", "SLF", "PERF", "FURB"]
 ignore = ["E501", "RUF001", "RUF002", "RUF003"]
 
+[tool.ruff.lint.per-file-ignores]
+# source-header 프론트매터(`# title: ...`)와 본문 노트(`# 1 제목`)를 ERA001이 주석 처리된 코드로 오탐한다.
+"src/**/*.py" = ["ERA001"]
+"tests/**/*.py" = ["ERA001"]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 7
 
