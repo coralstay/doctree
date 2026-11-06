@@ -14,7 +14,7 @@ from types import MappingProxyType
 
 from doctree.runtime_env.workspace_settings import resolve_lazy_attribute
 
-_EXPORTS = MappingProxyType({
+_EXPORTS = MappingProxyType({  # ---- 1
     "DANGEROUS_PDF_TAGS": "pdf_byte_inspector",
     "LocalPdfAudit": "pdf_byte_inspector",
     "compute_sha256": "pdf_byte_inspector",
@@ -52,3 +52,10 @@ def __dir__() -> list[str]:
     return sorted({*globals(), *__all__})
 
 
+
+
+# ======== 노트 ========
+# 1 지연 로딩 수출표
+#   설명: 공개 이름 -> 하위 모듈 표. 이 패키지에는 지금도 쓰이는 감사 모듈(pdf_byte_inspector, threat_intel_client)과 폐기된 파이프라인 모듈(pdf_page_ingestor)이 섞여 있다.
+#   관련: backlog/decisions/decision-1 (pdf_page_ingestor 쪽은 폐기 대상이며 제거될 수 있음)
+#   개념: PEP 562

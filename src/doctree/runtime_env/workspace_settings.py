@@ -55,7 +55,7 @@ except ImportError:
     pass
 
 PathLike = str | Path
-BASE_DIR: Final[Path] = Path(__file__).resolve().parents[3]
+BASE_DIR: Final[Path] = Path(__file__).resolve().parents[3]  # ---- 1
 DEFAULT_TOC_CHAPTER: Final[str] = "01_기본_개념"
 _FALLBACK_SVG: Final[str] = (
     '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n'
@@ -80,19 +80,19 @@ _DOT_RECORD_ESCAPE_TABLE: Final[Mapping[int, str]] = MappingProxyType(
 )
 
 
-def normalize_nfc(value: Any = "") -> str:
+def normalize_nfc(value: Any = "") -> str:  # ---- 2
     """임의 입력을 문자열로 변환하고 유니코드 완성형(NFC)으로 정규화한다 (None만 빈 문자열로 치환)."""
     text = "" if value is None else str(value)
     return unicodedata.normalize("NFC", text)
 
 
-def sanitize_dot_label(value: Any = "") -> str:
+def sanitize_dot_label(value: Any = "") -> str:  # ---- 3
     """Graphviz DOT record 레이블 내부 구분자(|, {, }, <, >)·따옴표·비출력 제어문자를 안전하게 치환한다."""
     translated = normalize_nfc(value).translate(_DOT_RECORD_ESCAPE_TABLE)
     return "".join(ch if ch.isprintable() else " " for ch in translated)
 
 
-def resolve_lazy_attribute(
+def resolve_lazy_attribute(  # ---- 4
     package_name: str,
     package_globals: dict[str, Any],
     exports: Mapping[str, str],
@@ -135,7 +135,7 @@ def atomic_write_bytes(
             tmp_path.chmod(0o444)
         else:
             tmp_path.chmod(0o644)
-        tmp_path.replace(path)
+        tmp_path.replace(path)  # ---- 5
     except BaseException:
         if tmp_path.exists():
             tmp_path.unlink(missing_ok=True)
@@ -159,7 +159,7 @@ def atomic_write_text(
     )
 
 
-def compute_sha256(path: PathLike, chunk_size: int = 1024 * 1024) -> str:
+def compute_sha256(path: PathLike, chunk_size: int = 1024 * 1024) -> str:  # ---- 6
     """로컬 파일의 SHA-256 해시(64자리 소문자 hex)를 청크 단위로 계산한다."""
     if type(chunk_size) is not int or chunk_size <= 0:
         raise ValueError("chunk_size는 1 이상의 정수여야 합니다.")
@@ -170,7 +170,7 @@ def compute_sha256(path: PathLike, chunk_size: int = 1024 * 1024) -> str:
     return digest.hexdigest()
 
 
-def discover_local_pdfs(roots: Iterable[PathLike]) -> list[Path]:
+def discover_local_pdfs(roots: Iterable[PathLike]) -> list[Path]:  # ---- 7
     """지정된 루트(파일 또는 디렉터리)에서 심볼릭 링크/경로 중복 없이 모든 로컬 PDF를 정렬해 반환한다."""
     pdfs: list[Path] = []
     seen: set[Path] = set()
@@ -193,7 +193,7 @@ def discover_local_pdfs(roots: Iterable[PathLike]) -> list[Path]:
     return pdfs
 
 
-def render_dot_to_svg(dot_source: str, svg_path: Path, *, dot_bin: str = "dot") -> bool:
+def render_dot_to_svg(dot_source: str, svg_path: Path, *, dot_bin: str = "dot") -> bool:  # ---- 8
     """Graphviz(dot -Tsvg)로 DOT 코드를 렌더링하여 벡터 SVG 파일로 원자적 저장한다 (실패 시 폴백 SVG 기록)."""
     try:
         proc = subprocess.run(
@@ -233,7 +233,7 @@ def build_default_toc_entry(
 
 
 @dataclass(frozen=True, slots=True)
-class WorkspaceSettings:
+class WorkspaceSettings:  # ---- 9
     """읽기 전용(Read-Only) 워크스페이스 설정 객체.
 
     전역 상태를 직접 수정하거나 importlib.reload()를 호출하는 대신,
@@ -256,7 +256,7 @@ class WorkspaceSettings:
     local_contents_cache_file: str
 
     @classmethod
-    def from_env(
+    def from_env(  # ---- 10
         cls,
         env: Mapping[str, str] | None = None,
         base_dir: Path | None = None,
@@ -298,7 +298,7 @@ class WorkspaceSettings:
         )
 
 
-_DEFAULT = WorkspaceSettings.from_env()
+_DEFAULT = WorkspaceSettings.from_env()  # ---- 11
 
 GOOGLE_SERVICE_ACCOUNT_FILE: str = _DEFAULT.google_service_account_file
 GOOGLE_DRIVE_FOLDER_ID: str = _DEFAULT.google_drive_folder_id
@@ -310,3 +310,34 @@ WORKSPACE_DIR: Path = _DEFAULT.workspace_dir
 VIRUSTOTAL_API_KEY: str = _DEFAULT.virustotal_api_key
 VT_CACHE_FILE: str = _DEFAULT.vt_cache_file
 LOCAL_CONTENTS_CACHE_FILE: str = _DEFAULT.local_contents_cache_file
+
+
+# ======== 노트 ========
+# 1 저장소 루트 계산
+#   설명: 이 파일 위치(src/doctree/runtime_env)에서 parents[3]로 올라가 저장소 루트를 구한다. 파일을 옮기면 깨지는 불변식이다.
+# 2 NFC 정규화
+#   설명: macOS 파일명은 NFD로 나오므로 비교·저장 전에 NFC로 맞춘다. None만 빈 문자열이 된다.
+#   개념: 유니코드 정규화 NFC/NFD
+# 3 DOT 레이블 이스케이프
+#   설명: Graphviz record 구분자와 제어문자를 치환해 레이블 주입을 막는다.
+# 4 지연 로딩 공통 해석기
+#   설명: 처음 접근 때 import한 값을 패키지 globals에 캐시해 이후 __getattr__ 호출을 없앤다.
+#   관련: src/doctree/*/__init__.py
+#   개념: PEP 562
+# 5 원자적 쓰기
+#   설명: 같은 디렉터리의 임시 파일에 쓴 뒤 replace로 교체한다. 도중에 실패하면 임시 파일을 지우고 예외를 다시 던져 기존 파일이 반쪽으로 남지 않는다.
+#   개념: 원자성(atomic rename)
+# 6 SHA-256 청크 계산
+#   설명: 대용량 PDF를 1MiB씩 읽어 메모리를 일정하게 쓴다. type(...) is not int로 bool을 걸러낸다.
+# 7 PDF 수집
+#   설명: resolve() 기준으로 중복을 제거해 심볼릭 링크로 같은 파일이 두 번 잡히지 않게 한다.
+# 8 SVG 렌더 폴백
+#   설명: dot 실행이 실패해도 폴백 SVG를 쓰고 항상 True를 돌려준다. 호출자는 렌더 실패를 반환값으로 알 수 없다.
+#   관련: backlog/decisions/decision-1 (PDF 파이프라인 폐기 - 호출처는 폐기 대상이며 제거될 수 있음)
+# 9 읽기 전용 설정 객체
+#   설명: frozen+slots 데이터클래스. 전역을 수정하거나 reload하지 않고 from_env로 격리된 인스턴스를 만들어 테스트에 주입한다.
+# 10 환경 변수 -> 설정
+#   설명: 모든 경로는 DOCTREE_* / GOOGLE_* 환경 변수로 덮어쓸 수 있고 기본값은 저장소 루트 기준이다. 자격 증명은 경로만 다루며 내용은 읽지 않는다.
+#   관련: .env.example
+# 11 모듈 수준 기본 설정
+#   설명: import 시점의 환경으로 만든 기본 인스턴스. 아래 대문자 상수들이 여기서 파생된다.

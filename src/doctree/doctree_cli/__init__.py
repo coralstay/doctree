@@ -14,7 +14,7 @@ from types import MappingProxyType
 
 from doctree.runtime_env.workspace_settings import resolve_lazy_attribute
 
-_EXPORTS = MappingProxyType({
+_EXPORTS = MappingProxyType({  # ---- 1
     "DoctreeHelpFormatter": "command_dispatcher",
     "build_drive": "command_dispatcher",
     "build_parser": "command_dispatcher",
@@ -50,3 +50,10 @@ def __dir__() -> list[str]:
     return sorted({*globals(), *__all__})
 
 
+
+
+# ======== 노트 ========
+# 1 지연 로딩 수출표
+#   설명: 공개 이름 -> 하위 모듈 표. command_dispatcher는 무거운 의존성(rich, google)을 끌어오므로 이름에 처음 접근할 때만 로드한다.
+#   관련: src/doctree/runtime_env/workspace_settings.py (resolve_lazy_attribute)
+#   개념: PEP 562

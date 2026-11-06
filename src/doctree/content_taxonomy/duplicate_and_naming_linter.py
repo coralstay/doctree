@@ -49,7 +49,7 @@ class WarningKind(StrEnum):
     SURROUNDING_WHITESPACE = "surrounding_whitespace"
 
 
-def title_key(name: str) -> str:
+def title_key(name: str) -> str:  # ---- 1
     """파일명(또는 제목)을 중복 점검용 제목 키로 정규화한다.
 
     순서: NFC 정규화 → 끝의 '.pdf'(대소문자 무시) 제거 → 앞의 'Copy of ' 제거
@@ -88,7 +88,7 @@ def _normalized_sha256(record: Record) -> str:
     return str(record.get("sha256") or "").strip().lower()
 
 
-def find_exact_duplicates(records: Iterable[Record]) -> list[CheckWarning]:
+def find_exact_duplicates(records: Iterable[Record]) -> list[CheckWarning]:  # ---- 2
     """SHA-256이 같은 파일 묶음마다 '완전 중복' 경고. SHA-256이 빈 파일은 묶지 않는다 (B1: 이름 무관)."""
     groups: dict[str, list[Record]] = defaultdict(list)
     for rec in records:
@@ -108,7 +108,7 @@ def find_exact_duplicates(records: Iterable[Record]) -> list[CheckWarning]:
     return sorted(warnings, key=_warning_sort_key)
 
 
-def find_same_title_different_content(records: Iterable[Record]) -> list[CheckWarning]:
+def find_same_title_different_content(records: Iterable[Record]) -> list[CheckWarning]:  # ---- 3
     """제목 키가 같지만 SHA-256 값이 2종 이상인 묶음마다 '동명 다른 파일' 경고."""
     groups: dict[str, list[Record]] = defaultdict(list)
     for rec in records:
@@ -134,7 +134,7 @@ _FILENAME_KINDS = (
 )
 
 
-def find_filename_issues(records: Iterable[Record]) -> list[CheckWarning]:
+def find_filename_issues(records: Iterable[Record]) -> list[CheckWarning]:  # ---- 4
     """파일별 파일명 점검: .pdf 확장자 누락, 'Copy of ' 접두어, 앞뒤 공백."""
     found: dict[WarningKind, list[CheckWarning]] = {k: [] for k in _FILENAME_KINDS}
     for rec in records:
@@ -158,7 +158,7 @@ def find_filename_issues(records: Iterable[Record]) -> list[CheckWarning]:
     return warnings
 
 
-def run_checks(records: Iterable[Record]) -> list[CheckWarning]:
+def run_checks(records: Iterable[Record]) -> list[CheckWarning]:  # ---- 5
     """모든 점검을 실행해 종류 순(완전 중복 → 동명 다른 파일 → 파일명 점검) → 경로 순 경고 목록을 반환한다."""
     records = list(records)
     return (
@@ -166,3 +166,17 @@ def run_checks(records: Iterable[Record]) -> list[CheckWarning]:
         + find_same_title_different_content(records)
         + find_filename_issues(records)
     )
+
+
+# ======== 노트 ========
+# 1 제목 키 정규화 순서
+#   설명: NFC -> 끝 '.pdf' 제거 -> 앞 'Copy of ' 제거 -> 하이픈·공백 제거 -> 소문자. 순서가 바뀌면 같은 제목이 다른 키가 될 수 있다.
+# 2 완전 중복(B1)
+#   설명: SHA-256이 같은 파일 묶음. 이름은 보지 않으며 해시가 빈 레코드는 묶지 않는다(빈 해시끼리 중복으로 오탐 방지).
+# 3 동명 다른 파일
+#   설명: 제목 키가 같은데 해시가 2종 이상인 묶음. 같은 책의 다른 판본이나 손상본 후보를 찾는다.
+# 4 파일명 점검
+#   설명: .pdf 확장자 누락, 'Copy of ' 접두어, 앞뒤 공백 세 가지를 종류별로 모아 경로 순으로 돌려준다.
+# 5 점검 실행 순서
+#   설명: 완전 중복 -> 동명 다른 파일 -> 파일명 순으로 이어 붙인다. CLI 출력 순서가 이 순서에 의존한다.
+#   관련: KBI-5

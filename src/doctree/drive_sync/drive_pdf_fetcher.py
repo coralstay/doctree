@@ -36,7 +36,7 @@ try:
     from google.oauth2.credentials import Credentials
     from google_auth_oauthlib.flow import InstalledAppFlow
     from googleapiclient.discovery import build
-    GOOGLE_API_AVAILABLE = True
+    GOOGLE_API_AVAILABLE = True  # ---- 1
 except ImportError:
     service_account = None
     Credentials = None
@@ -45,11 +45,11 @@ except ImportError:
     build = None
     GOOGLE_API_AVAILABLE = False
 
-SCOPES: Final[tuple[str, ...]] = ('https://www.googleapis.com/auth/drive.readonly',)
+SCOPES: Final[tuple[str, ...]] = ('https://www.googleapis.com/auth/drive.readonly',)  # ---- 2
 
 FOLDER_MIME = 'application/vnd.google-apps.folder'
 PDF_MIME = 'application/pdf'
-LIST_FIELDS = 'nextPageToken, files(id, name, mimeType, parents, size, sha256Checksum, modifiedTime, webViewLink)'
+LIST_FIELDS = 'nextPageToken, files(id, name, mimeType, parents, size, sha256Checksum, modifiedTime, webViewLink)'  # ---- 3
 _BYTES_PER_GIB: Final[int] = 1024**3
 
 
@@ -80,7 +80,7 @@ class DrivePdfRecord(TypedDict):
     web_view_link: str
 
 
-def is_pdf_item(item: dict) -> bool:
+def is_pdf_item(item: dict) -> bool:  # ---- 4
     """mimeType이 application/pdf이거나 이름이 .pdf로 끝나면(대소문자 무시) 콘텐츠 PDF로 본다."""
     return item.get('mimeType') == PDF_MIME or normalize_nfc(item.get('name')).lower().endswith('.pdf')
 
@@ -90,7 +90,7 @@ class GoogleDriveManager:
 
     __slots__ = ("folder_id", "service", "service_account_file", "token_file")
 
-    def __init__(self, service_account_file: str | None = None, folder_id: str | None = None):
+    def __init__(self, service_account_file: str | None = None, folder_id: str | None = None):  # ---- 5
         self.service_account_file = service_account_file or os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
         if not self.service_account_file and Path("credentials.json").exists():
             self.service_account_file = "credentials.json"
@@ -105,7 +105,7 @@ class GoogleDriveManager:
         ):
             self._authenticate()
 
-    def _try_load_or_refresh_token(self) -> Any:
+    def _try_load_or_refresh_token(self) -> Any:  # ---- 6
         """기존 token.json에서 유효한 자격증명을 로드하거나 만료 시 refresh_token으로 원자적 갱신한다."""
         if not self.token_file.exists():
             return None
@@ -121,7 +121,7 @@ class GoogleDriveManager:
             print(f"[GoogleDriveManager] 기존 token.json 로드 실패: {e}")
         return None
 
-    def _load_credentials_from_secret_file(self) -> Any:
+    def _load_credentials_from_secret_file(self) -> Any:  # ---- 7
         """서비스 계정 키 또는 OAuth 2.0 클라이언트 시크릿(credentials.json)으로부터 자격증명을 생성한다."""
         if not self.service_account_file or not os.path.exists(self.service_account_file):
             print("[GoogleDriveManager] 인증 키 파일(credentials.json)이 없습니다.")
@@ -187,7 +187,7 @@ class GoogleDriveManager:
             print(f"[GoogleDriveManager] 계정 및 스토리지 정보 조회 실패: {e}")
             return None
 
-    def _list_all_items(self) -> list[dict]:
+    def _list_all_items(self) -> list[dict]:  # ---- 8
         """휴지통을 제외한 드라이브 항목(폴더·파일)을 페이지네이션으로 모두 수집한다."""
         all_items: list[dict] = []
         page_token = None
@@ -205,7 +205,7 @@ class GoogleDriveManager:
                 break
         return all_items
 
-    def _resolve_folder_path(self, item: dict, folders_map: dict[str, dict]) -> str | None:
+    def _resolve_folder_path(self, item: dict, folders_map: dict[str, dict]) -> str | None:  # ---- 9
         """파일의 상위 폴더 이름만 '/'로 이어 folder_path를 만든다 (파일명은 절대 쪼개지 않는다).
 
         - folder_id 지정: 조상 체인이 folder_id에 닿아야 하며, 그 폴더 기준 상대 경로를 돌려준다
@@ -231,7 +231,7 @@ class GoogleDriveManager:
             return None
         return '/'.join(reversed(folder_names))
 
-    def list_pdf_files(self) -> list[DrivePdfRecord]:
+    def list_pdf_files(self) -> list[DrivePdfRecord]:  # ---- 10
         """콘텐츠 PDF 목록을 스냅샷용 메타데이터 레코드로 반환한다.
 
         레코드 키: id, name, folder_path, size_bytes(int), sha256(str, 없으면 ""),
@@ -274,3 +274,33 @@ class GoogleDriveManager:
 
         records.sort(key=lambda r: (r['folder_path'], r['name']))
         return records
+
+
+# ======== 노트 ========
+# 1 선택적 의존성 가드
+#   설명: google 라이브러리가 없어도 import는 성공하고 GOOGLE_API_AVAILABLE=False가 된다. 인증이 필요한 호출만 실패한다(오프라인 명령과 테스트가 계속 동작).
+# 2 읽기 전용 스코프
+#   설명: drive.readonly 하나만 요청한다. 이 도구는 드라이브를 바꾸지 않고 메타데이터만 읽는다는 약속이다.
+#   관련: backlog/decisions/decision-1, backlog/decisions/decision-2
+# 3 API 필드 마스크
+#   설명: files.list가 돌려줄 필드를 필요한 것만 고른다. sha256Checksum 덕분에 PDF를 내려받지 않고도 내용 동일성을 비교할 수 있다.
+#   개념: Drive API fields 파라미터
+# 4 PDF 판정
+#   설명: mimeType 또는 .pdf 확장자 중 하나면 PDF로 본다(확장자가 없는 업로드도 mimeType으로 잡는다).
+# 5 인증 파일 해석
+#   설명: 인자, 환경 변수, 현재 디렉터리의 credentials.json 순으로 찾고 token.json은 그 옆에 둔다. 파일 내용(자격 증명)은 로그나 메시지에 싣지 않는다.
+#   관련: src/doctree/runtime_env/workspace_settings.py, backlog/decisions/decision-2
+# 6 토큰 재사용과 갱신
+#   설명: 유효한 token.json이면 그대로 쓰고, 만료됐고 refresh_token이 있으면 갱신 후 원자적으로 다시 저장한다. 테스트 모드 OAuth는 refresh token이 7일 만에 만료되어 재인증이 필요하다.
+#   관련: backlog/decisions/decision-2
+# 7 서비스 계정과 OAuth 분기
+#   설명: credentials.json의 type으로 서비스 계정과 설치형/웹 OAuth 클라이언트를 구분한다. OAuth는 브라우저 로그인(run_local_server)이 필요해 수동 실행만 가능하다.
+#   관련: backlog/decisions/decision-2
+#   개념: InstalledAppFlow
+# 8 휴지통 제외 전체 수집
+#   설명: trashed=false 조건으로 페이지당 1000개씩 nextPageToken이 끝날 때까지 모은다. 폴더도 함께 받아야 folder_path를 계산할 수 있다.
+# 9 folder_path 계산 규칙
+#   설명: 부모 체인을 따라 올라가 폴더 이름만 '/'로 잇는다. folder_id를 지정했으면 그 폴더에 닿지 못하는 항목(공유 항목 포함)은 None으로 제외하고, 미지정이면 알 수 없는 부모에서 멈춘다. visited 집합으로 순환 부모를 막는다.
+# 10 목록 수집과 실패 구분
+#   설명: 서비스가 없으면 빈 목록을 돌려주지만 API 호출이 실패하면 DriveListError를 던진다. 실패를 빈 목록으로 오인해 빈 스냅샷을 저장하는 사고를 막는 설계다.
+#   관련: KBI-6#B2, src/doctree/drive_sync/snapshot_diff_tracker.py

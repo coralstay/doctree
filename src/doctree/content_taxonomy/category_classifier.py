@@ -87,7 +87,7 @@ class ClassificationResult:
         return tuple(content for content in self.contents if content.category_id is None)
 
 
-def _load_schema_collection(path: PathLike, collection: str) -> list[Any]:
+def _load_schema_collection(path: PathLike, collection: str) -> list[Any]:  # ---- 1
     location = str(path)
     doc = validate_mapping_keys(
         read_strict_yaml(path),
@@ -124,7 +124,7 @@ def _parse_subcategories(
     return tuple(subcategories)
 
 
-def _parse_category_tree(category_tree_path: PathLike) -> tuple[tuple[Category, ...], set[str]]:
+def _parse_category_tree(category_tree_path: PathLike) -> tuple[tuple[Category, ...], set[str]]:  # ---- 2
     raw_categories = _load_schema_collection(category_tree_path, "categories")
     categories: list[Category] = []
     all_node_ids: set[str] = set()
@@ -146,7 +146,7 @@ def _parse_category_tree(category_tree_path: PathLike) -> tuple[tuple[Category, 
     return tuple(categories), leaf_ids
 
 
-def _parse_content_assignments(
+def _parse_content_assignments(  # ---- 3
     content_category_map_path: PathLike,
     leaf_ids: set[str],
 ) -> tuple[ContentAssignment, ...]:
@@ -170,14 +170,14 @@ def _parse_content_assignments(
     return tuple(assignments)
 
 
-def load_catalog(category_tree_path: PathLike, content_category_map_path: PathLike) -> ClassificationCatalog:
+def load_catalog(category_tree_path: PathLike, content_category_map_path: PathLike) -> ClassificationCatalog:  # ---- 4
     """Load both configuration files, rejecting invalid or ambiguous mappings."""
     categories, leaf_ids = _parse_category_tree(category_tree_path)
     assignments = _parse_content_assignments(content_category_map_path, leaf_ids)
     return ClassificationCatalog(categories=categories, assignments=assignments)
 
 
-def classify_records(
+def classify_records(  # ---- 5
     records: Iterable[dict], catalog: ClassificationCatalog, *, strict: bool = False
 ) -> ClassificationResult:
     """Assign known Drive IDs and leave every new ID pending explicit review."""
@@ -203,3 +203,22 @@ def classify_records(
         pending = ", ".join(repr(content.record["id"]) for content in result.unclassified)
         raise ClassificationError(f"미분류 콘텐츠 {len(result.unclassified)}권: {pending}")
     return result
+
+
+# ======== 노트 ========
+# 1 스키마 공통 로더
+#   설명: 분류 트리와 배정표 두 YAML이 같은 읽기·검증 경로(중복 키 금지, schema_version==1)를 쓴다. categories만 비어 있으면 안 된다.
+#   관련: src/doctree/runtime_env/layout_profile_store.py (read_strict_yaml)
+# 2 고정 분류 트리 파싱
+#   설명: 대분야 id와 세부분야 id는 하나의 id 공간에서 유일해야 하고, 같은 부모 아래 이름도 겹치면 안 된다. 세부분야(leaf) id 집합을 배정표 검증에 넘긴다.
+#   관련: config/category_tree.yaml, backlog/decisions/decision-3
+# 3 파일 ID별 배정 검증
+#   설명: 배정표의 category_id는 반드시 세부분야(leaf)여야 하고 file_id는 유일해야 한다. 제목이 아니라 파일 ID로 묶는다(이름이 바뀌어도 분류가 유지된다).
+#   관련: config/content_category_map.example.yaml, backlog/decisions/decision-3
+#   개념: 영속 식별자(persistent ID)
+# 4 카탈로그 로드
+#   설명: 두 설정 파일을 모두 검증한 불변 카탈로그를 만든다. 잘못되었거나 모호한 매핑은 여기서 거부된다.
+# 5 분류와 strict 모드
+#   설명: 배정표에 없는 새 파일 ID는 자동 분류하지 않고 category_id=None(검토 대기)으로 둔다. strict면 미분류가 1권이라도 있을 때 ClassificationError로 실패해 CLI 종료 코드를 1로 만든다.
+#   관련: src/doctree/doctree_cli/command_dispatcher.py
+#   개념: 명시적 검토 대기
