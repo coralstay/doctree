@@ -424,7 +424,7 @@ tips
 
 ### 6.1 패키지 분할 및 작명 원칙 (《Code Complete 2판》 기준)
 
-본 저장소([contents-overview-tocs.md](../coding-style-refactoring-principles/contents-overview-tocs.md#L27-L255))의 《Code Complete 2판》(Steve McConnell)이 정의한 모듈화 및 문제 지향적 작명 원칙을 따릅니다:
+《Code Complete 2판》(Steve McConnell)이 정의한 모듈화 및 문제 지향적 작명 원칙을 따릅니다:
 
 | 《Code Complete 2판》 장·절 | 핵심 원칙 | `doctree` 적용 내역 |
 |---|---|---|
