@@ -1,3 +1,12 @@
+# ---
+# title: boundary_errors
+# description: 외부 입출력·런타임 경계의 통합 예외 계층과 HTTP GET 핸들러
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """외부 입출력·런타임 경계 통합 예외 계층 및 HTTP GET 핸들러."""
 from __future__ import annotations
 
@@ -26,7 +35,7 @@ __all__ = [
 ]
 
 
-class ExternalBoundary(StrEnum):
+class ExternalBoundary(StrEnum):  # ---- 1
     """프로세스가 외부 세계와 데이터를 주고받는 4대 물리·런타임 경계면."""
 
     PROCESS_TERMINAL = "process_terminal"
@@ -46,7 +55,7 @@ class BoundaryKind(StrEnum):
     SECURITY_AUDIT = "security_audit"
 
 
-BOUNDARY_TO_EXTERNAL: Final[Mapping[BoundaryKind, ExternalBoundary]] = MappingProxyType(
+BOUNDARY_TO_EXTERNAL: Final[Mapping[BoundaryKind, ExternalBoundary]] = MappingProxyType(  # ---- 2
     {
         BoundaryKind.AUTH: ExternalBoundary.NETWORK_API,
         BoundaryKind.DRIVE_API: ExternalBoundary.NETWORK_API,
@@ -74,12 +83,12 @@ AUTH_MISSING_MESSAGE: Final[str] = (
     "`doctree auth`를 먼저 실행하세요."
 )
 SNAPSHOT_PRESERVED_NOTICE: Final[str] = "기존 스냅샷은 그대로 두었습니다."
-_RAW_DETAIL_BOUNDARIES: Final[frozenset[BoundaryKind]] = frozenset(
+_RAW_DETAIL_BOUNDARIES: Final[frozenset[BoundaryKind]] = frozenset(  # ---- 3
     {BoundaryKind.AUTH, BoundaryKind.SECURITY_AUDIT}
 )
 
 
-class DoctreeBoundaryError(Exception):
+class DoctreeBoundaryError(Exception):  # ---- 4
     """doctree의 모든 외부 경계면 예외의 최상위 기반 클래스.
 
     발생 세부 경계(boundary), 상세 사유(detail), 스냅샷 보존 안내 여부(preserve_snapshot)를
@@ -106,7 +115,7 @@ class DoctreeBoundaryError(Exception):
         """이 예외가 속한 상위 4대 외부 경계면(ExternalBoundary)을 반환한다."""
         return BOUNDARY_TO_EXTERNAL[self.boundary]
 
-    def format_error(self) -> str:
+    def format_error(self) -> str:  # ---- 5
         """경계면 종류에 맞는 일관된 한국어 에러 메시지를 반환한다."""
         if self.boundary in _RAW_DETAIL_BOUNDARIES:
             return self.detail
@@ -116,7 +125,7 @@ class DoctreeBoundaryError(Exception):
         return f"{prefix}: {self.detail}"
 
 
-class DriveAuthError(DoctreeBoundaryError, RuntimeError):
+class DriveAuthError(DoctreeBoundaryError, RuntimeError):  # ---- 6
     """구글 드라이브 OAuth 2.0 / 서비스 계정 인증 경계 실패 (경계 ② 네트워크 소켓 & ③ 파일시스템)."""
 
     __slots__ = ()
@@ -159,7 +168,7 @@ class SecurityAuditError(DoctreeBoundaryError, RuntimeError):
     default_boundary = BoundaryKind.SECURITY_AUDIT
 
 
-def coerce_boundary_error(
+def coerce_boundary_error(  # ---- 7
     error: BaseException,
     *,
     default_boundary: BoundaryKind = BoundaryKind.FILESYSTEM,
@@ -182,10 +191,10 @@ def coerce_boundary_error(
     )
 
 
-_MAX_HTTP_RESPONSE_BYTES: Final[int] = 10 * 1024 * 1024
+_MAX_HTTP_RESPONSE_BYTES: Final[int] = 10 * 1024 * 1024  # ---- 8
 
 
-def execute_json_http_get(
+def execute_json_http_get(  # ---- 9
     url: str,
     headers: Mapping[str, str],
     *,
@@ -217,3 +226,30 @@ def execute_json_http_get(
         return None, exc.code, f"HTTP {exc.code}"
     except Exception as exc:
         return None, None, str(exc)
+
+
+# ======== 노트 ========
+# 1 4대 외부 경계면
+#   설명: 프로세스가 외부와 데이터를 주고받는 물리 경계(터미널, 네트워크, 파일시스템, 시스템 시계). 예외는 모두 이 넷 중 하나로 귀속된다.
+#   관련: README.md 3.1, BOUNDARY_TO_EXTERNAL
+#   개념: 경계면(boundary)
+# 2 세부 경계 -> 외부 경계 매핑
+#   설명: BoundaryKind(세부)를 ExternalBoundary(상위 4대)로 올리는 읽기 전용 표. 새 BoundaryKind를 추가하면 이 표와 _BOUNDARY_PREFIX를 함께 채워야 KeyError가 나지 않는다.
+#   개념: MappingProxyType 불변 매핑
+# 3 원문 그대로 출력하는 경계
+#   설명: AUTH, SECURITY_AUDIT는 상세 메시지 자체가 완결된 안내문이라 format_error가 접두사를 붙이지 않는다.
+# 4 예외 계층의 최상위
+#   설명: boundary, detail, preserve_snapshot을 한 구조로 들고 format_error()로 사용자 메시지를 통일한다. CLI는 이 타입 하나만 잡으면 된다.
+#   관련: src/doctree/doctree_cli/command_dispatcher.py
+# 5 메시지 접두사 규칙
+#   설명: 이미 '<접두사>:'로 시작하는 detail에는 접두사를 또 붙이지 않는다(중복 방지).
+# 6 인증 실패 기본 메시지
+#   설명: detail 기본값이 AUTH_MISSING_MESSAGE라 credentials.json/token.json 부재 시 `doctree auth` 안내가 나간다. 비밀 값은 메시지에 담지 않는다.
+#   관련: backlog/decisions/decision-2
+# 7 저수준 예외 승격
+#   설명: OSError/JSON 오류 등을 DoctreeBoundaryError로 바꿔 CLI의 종료 코드 처리를 단일화한다. 이미 경계 예외면 그대로 두고 preserve_snapshot만 올린다.
+# 8 응답 크기 상한
+#   설명: 외부 API 응답을 10MiB까지만 읽어 메모리 폭주를 막는다.
+# 9 HTTP GET 일원화
+#   설명: 외부 REST GET의 예외를 (본문, 상태코드, 오류 상세) 튜플로 바꿔 호출자가 try/except 없이 분기하게 한다. http/https 외 스킴은 거부한다.
+#   관련: src/doctree/pdf_threat_audit/threat_intel_client.py

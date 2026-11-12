@@ -1,3 +1,12 @@
+# ---
+# title: snippet_registry
+# description: 실습 코드의 snippet 표식을 추출하고 SHA-256 검증 레지스트리와 마크다운·블로그 내보내기를 제공한다
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """실습 코드(practice/) 내 [[snippet]] / @snippet 추출, SHA-256 인간 검증 레지스트리 및 마크다운·블로그 내보내기 엔진."""
 from __future__ import annotations
 
@@ -54,7 +63,7 @@ SNIPPET_EXT_LANG_MAP: Final[Mapping[str, str]] = MappingProxyType(
     }
 )
 
-_SNIPPET_MARKER_RE: Final[re.Pattern[str]] = re.compile(
+_SNIPPET_MARKER_RE: Final[re.Pattern[str]] = re.compile(  # ---- 1
     r"(?:\[\[\s*snippet(?:\s*\(\s*[\"']([^\"']*)[\"']\s*\))?\s*\]\]"
     r"|@snippet(?:\s*\(\s*[\"']([^\"']*)[\"']\s*\)|\s+([^\r\n]+))?)"
 )
@@ -130,7 +139,7 @@ def _slice_snippet_code(lines: Sequence[str], start_idx: int, end_idx: int) -> s
     return joined or lines[start_idx].strip()
 
 
-def _extract_snippets_from_file(file_path: Path, project_root: Path) -> list[SnippetRecord]:
+def _extract_snippets_from_file(file_path: Path, project_root: Path) -> list[SnippetRecord]:  # ---- 2
     """단일 소스 파일에서 모든 [[snippet]] / @snippet 블록을 추출한다."""
     lang = SNIPPET_EXT_LANG_MAP.get(file_path.suffix.lower())
     if lang is None:
@@ -185,7 +194,7 @@ def load_snippet_registry(registry_path: PathLike) -> dict[str, dict[str, Any]]:
     }
 
 
-def _reconcile_record_with_registry(
+def _reconcile_record_with_registry(  # ---- 3
     record: SnippetRecord,
     registry: Mapping[str, Mapping[str, Any]],
 ) -> SnippetRecord:
@@ -291,7 +300,7 @@ def sync_snippet_registry(project_dir: PathLike) -> tuple[SnippetRecord, ...]:
     return records
 
 
-def verify_snippet(
+def verify_snippet(  # ---- 4
     project_dir: PathLike,
     target_symbol: str,
     *,
@@ -411,7 +420,7 @@ def export_snippets_markdown(
     return atomic_write_text(target, "\n".join(lines))
 
 
-def export_snippets_blog_posts(
+def export_snippets_blog_posts(  # ---- 5
     project_dir: PathLike,
     posts_dir: PathLike | None = None,
     *,
@@ -449,3 +458,19 @@ def export_snippets_blog_posts(
         )
         written.append(atomic_write_text(post_path, post_text))
     return tuple(written)
+
+
+# ======== 노트 ========
+# 1 snippet 표식 문법
+#   설명: `[[snippet]]`, `[[snippet("설명")]]`, `@snippet 설명` 세 형태를 한 정규식이 받는다.
+#   관련: src/doctree/runtime_env/project_scaffolder.py (scripts/snippets.sh 템플릿)
+# 2 파일별 스니펫 추출
+#   설명: 표식 위치부터 다음 표식 직전(없으면 파일 끝)까지를 한 스니펫의 코드로 잘라 SHA-256을 계산해 SnippetRecord로 만든다. 읽기 오류는 errors=replace, NUL 제거로 견딘다.
+# 3 검증 상태 결정
+#   설명: 레지스트리의 인간 검증 해시와 현재 코드 해시가 같으면 VERIFIED, 다르면 OUTDATED(코드가 검증 뒤 바뀜), 기록이 없으면 그대로다.
+#   개념: 해시 기반 변경 감지
+# 4 인간 검증 승인
+#   설명: 대상 스니펫을 VERIFIED로 올리고 tips/snippets_registry.json에 해시를 기록한다. verified_at 기본값이 고정 날짜(2026-10-30)라 호출 측이 날짜를 넘기지 않으면 오늘 날짜가 아니다.
+# 5 블로그 내보내기
+#   설명: VERIFIED 스니펫만 tips/posts/YYYY-MM-DD-<slug>.md로 내보낸다. date_prefix 기본값이 고정 날짜다.
+#   관련: backlog/decisions/decision-1 - 실습(practice) 흐름과 함께 쓰이므로 폐기된 파이프라인과 함께 제거될 수 있다.

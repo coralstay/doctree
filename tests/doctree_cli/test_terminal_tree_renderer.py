@@ -1,3 +1,12 @@
+# ---
+# title: test_terminal_tree_renderer
+# description: 터미널 트리 포맷터와 대시보드 렌더러의 단위 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """터미널 출력 포맷터 및 대시보드(src.doctree_cli.terminal_tree_renderer) 단위 테스트."""
 import io
 import unicodedata

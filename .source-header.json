@@ -1,0 +1,1 @@
+{"include": ["src/**", "tests/**", "install.sh", "uninstall.sh"], "exclude": ["**/README.md", "**/CHANGELOG.md", "backlog/**", ".opensource/**", "contents/**", "content_data/**", ".venv/**", "snapshots/**", ".agents/**", "docs/**", "tests/**/*.yaml", "tests/**/*.feature"]}

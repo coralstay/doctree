@@ -1,3 +1,12 @@
+# ---
+# title: pdf_page_ingestor
+# description: PDF를 페이지별로 파싱해 content_data로 만들고 원본과의 동일성을 기계 검증한다 (폐기된 PDF 파이프라인 잔재)
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """페이지별 PDF 파싱(텍스트·코드·크롭 PNG·Graphviz DOT SVG) 및 원본 PDF ⟷ content_data/ 5대 동일성 기계 검증 파이프라인 (Step 3: doctree parse)."""
 from __future__ import annotations
 
@@ -50,7 +59,7 @@ _TOKEN_RE: Final[re.Pattern[str]] = re.compile(r"[0-9]+(?:\.[0-9]+)?|[A-Za-z_][A
 _NUM_OR_IDENT_RE: Final[re.Pattern[str]] = re.compile(r"^(?:[0-9]+(?:\.[0-9]+)?|[A-Za-z_][A-Za-z0-9_]*)\Z")
 _CODE_BLOCK_RE: Final[re.Pattern[str]] = re.compile(r"```([A-Za-z0-9_+.\-]*)\n(.*?)```", re.DOTALL)
 _DOT_GRAPH_KEYWORD_RE: Final[re.Pattern[str]] = re.compile(r"\b(?:di)?graph\b")
-_MAX_DECOMPRESSED_STREAM_BYTES: Final[int] = 16 * 1024 * 1024
+_MAX_DECOMPRESSED_STREAM_BYTES: Final[int] = 16 * 1024 * 1024  # ---- 1
 _CODE_PREFIX_LANG: Final[tuple[tuple[str, str], ...]] = (
     ("CODE_PY:", "python"),
     ("CODE_CPP:", "cpp"),
@@ -184,7 +193,7 @@ def _decode_pdf_literal(raw_bytes: bytes) -> str:
     return normalize_nfc(inner.decode("utf-8", errors="replace"))
 
 
-def _extract_stream_payload(stream_bytes: bytes) -> bytes:
+def _extract_stream_payload(stream_bytes: bytes) -> bytes:  # ---- 2
     """FlateDecode(zlib) 스트림을 최대 16MiB 상한 내에서 안전하게 압축 해제한다 (압축 폭탄 방어)."""
     try:
         return zlib.decompressobj().decompress(stream_bytes, _MAX_DECOMPRESSED_STREAM_BYTES)
@@ -228,7 +237,7 @@ def _extract_lines_and_figures_from_chunk(
     return "\n".join(decoded_parts).splitlines(), fig_labels
 
 
-def _read_ocr_cache_text(src_pdf: Path, content_name: str, page_num: int) -> str:
+def _read_ocr_cache_text(src_pdf: Path, content_name: str, page_num: int) -> str:  # ---- 3
     """페이지별 OCR 캐시(.ocr-cache/**/page_NNNN.txt)가 존재하면 NFC 정규화된 텍스트를 반환한다."""
     page_file = f"page_{page_num:04d}.txt"
     contents_root = _find_contents_ancestor(src_pdf) or src_pdf.parent
@@ -280,7 +289,7 @@ def _parse_single_page_chunk(page_num: int, chunk: bytes, ocr_text: str = "") ->
     )
 
 
-def extract_raw_pdf_pages(pdf_path: PathLike) -> tuple[str, list[RawPdfPage]]:
+def extract_raw_pdf_pages(pdf_path: PathLike) -> tuple[str, list[RawPdfPage]]:  # ---- 4
     """원본 PDF에서 SHA-256 해시와 페이지별 텍스트·도식 영역·구조 메타데이터(.ocr-cache 포함)를 추출한다."""
     p = Path(pdf_path)
     if not p.is_file():
@@ -372,7 +381,7 @@ def verify_code_and_dot_blocks(md_text: str, *, dot_bin: str = "dot") -> tuple[b
     return code_ok, dot_ok
 
 
-def _evaluate_token_fidelity(raw_text: str, md_text: str) -> tuple[float, bool, tuple[str, ...]]:
+def _evaluate_token_fidelity(raw_text: str, md_text: str) -> tuple[float, bool, tuple[str, ...]]:  # ---- 5
     """원본 PDF 텍스트와 마크다운 본문 간 토큰 재현율·수치/식별자 일치 여부·누락 토큰 목록을 계산한다."""
     pdf_tokens = set(tokenize_content(raw_text))
     if not pdf_tokens:
@@ -414,7 +423,7 @@ def _verify_figure_assets(
     return figures_extracted, parallel_layout_ok
 
 
-def verify_single_page(
+def verify_single_page(  # ---- 6
     content_name: str,
     raw_page: RawPdfPage,
     md_path: Path,
@@ -542,7 +551,7 @@ def _render_page_markdown_and_assets(
     return toc_entry
 
 
-def parse_pdf_to_content_data(
+def parse_pdf_to_content_data(  # ---- 7
     pdf_path: PathLike,
     *,
     output_dir: PathLike | None = None,
@@ -625,7 +634,7 @@ def _write_index_json(
     return atomic_write_text(index_path, text)
 
 
-def verify_content_data(
+def verify_content_data(  # ---- 8
     pdf_path: PathLike,
     content_out_dir: PathLike,
     *,
@@ -682,3 +691,30 @@ def verify_content_data(
         verified_pages=len(records),
         pages=tuple(records),
     )
+
+
+# ======== 노트 ========
+# 1 압축 해제 상한
+#   설명: FlateDecode 스트림을 16MiB까지만 풀어 압축 폭탄을 막는다.
+#   관련: backlog/decisions/decision-1 - 이 모듈은 decision-1에서 폐기된 PDF->Markdown 파이프라인에 속하며 제거될 수 있다.
+# 2 압축 폭탄 방어
+#   설명: decompressobj의 max_length 인자로 출력 크기를 제한한다. 풀리지 않는 스트림은 원본 바이트를 그대로 쓴다.
+#   개념: decompression bomb
+# 3 OCR 캐시 후보 경로
+#   설명: PDF 옆 .ocr-cache, 콘텐츠명 하위, contents 루트 하위 순으로 page_NNNN.txt를 찾는다. PDF에서 텍스트를 얻지 못한 페이지에 외부 OCR 결과를 대신 쓰기 위한 장치로 보인다.
+#   관련: backlog/decisions/decision-1 - decision-1에서 폐기된 PDF->Markdown 파이프라인에 속하며 제거될 수 있다.
+# 4 PDF 원문 추출
+#   설명: 외부 PDF 라이브러리 없이 페이지 객체와 텍스트 스트림을 정규식으로 직접 파싱한다. 해시와 페이지 목록을 함께 돌려준다.
+#   관련: backlog/decisions/decision-1 - decision-1에서 폐기된 PDF->Markdown 파이프라인에 속하며 제거될 수 있다.
+# 5 토큰 재현율 검증
+#   설명: 원본 텍스트의 토큰이 마크다운에 얼마나 남았는지(재현율)와, 숫자·식별자 토큰이 하나도 빠지지 않았는지를 따로 본다. 번역·요약 없는 충실한 변환임을 기계로 확인하는 기준이었다.
+#   관련: backlog/decisions/decision-1 - decision-1에서 폐기된 PDF->Markdown 파이프라인에 속하며 제거될 수 있다.
+# 6 5대 동일성 검증
+#   설명: 한 페이지의 마크다운을 원본과 토큰 재현율(0.99 이상)·숫자 일치, 그림 수, 코드 문법, DOT 렌더, 병렬 레이아웃 지표로 비교한다. PageVerificationRecord.status가 이 지표들에서 PASS/WARN을 파생한다.
+#   관련: backlog/decisions/decision-1 - decision-1에서 폐기된 PDF->Markdown 파이프라인에 속하며 제거될 수 있다.
+# 7 parse 진입점
+#   설명: PDF 하나를 페이지별 .md, 크롭 PNG, DOT SVG와 index.json으로 만든다. `doctree parse` 명령이 부른다.
+#   관련: src/doctree/doctree_cli/command_dispatcher.py (cmd_parse), backlog/decisions/decision-1 - decision-1에서 폐기된 PDF->Markdown 파이프라인에 속하며 제거될 수 있다.
+# 8 산출물 재검증
+#   설명: 이미 만든 content_data를 원본 PDF와 다시 대조하고 index.json을 갱신한다. preloaded_pages로 원본을 다시 읽지 않게 할 수 있다.
+#   관련: backlog/decisions/decision-1 - decision-1에서 폐기된 PDF->Markdown 파이프라인에 속하며 제거될 수 있다.

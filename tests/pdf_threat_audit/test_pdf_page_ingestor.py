@@ -1,3 +1,12 @@
+# ---
+# title: test_pdf_page_ingestor
+# description: PDF 페이지 파서와 동일성 기계 검증의 테스트 (폐기된 파이프라인)
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """페이지별 PDF 파싱·크롭 PNG·Graphviz DOT SVG 및 5대 동일성 기계 검증(pdf_page_ingestor.py) 단위·통합 테스트."""
 from __future__ import annotations
 

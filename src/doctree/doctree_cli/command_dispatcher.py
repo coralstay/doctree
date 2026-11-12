@@ -1,3 +1,12 @@
+# ---
+# title: command_dispatcher
+# description: 'doctree CLI의 명령어 파서와 디스패처: 드라이브 스냅샷·분류·레이아웃·감사 명령을 실행한다'
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """doctree: 구글 드라이브 콘텐츠(contents) PDF 스냅샷, 분류, 레이아웃 규격 및 보안 감사 관리 CLI."""
 from __future__ import annotations
 
@@ -105,7 +114,7 @@ __all__ = [
 ]
 
 
-def build_drive() -> GoogleDriveManager:
+def build_drive() -> GoogleDriveManager:  # ---- 1
     """기존 credentials.json / token.json 위치 그대로 Drive 클라이언트를 만든다 (재로그인 불필요)."""
     return GoogleDriveManager(
         service_account_file=GOOGLE_SERVICE_ACCOUNT_FILE,
@@ -113,7 +122,7 @@ def build_drive() -> GoogleDriveManager:
     )
 
 
-def _render_boundary_error(
+def _render_boundary_error(  # ---- 2
     error: BaseException,
     *,
     default_boundary: BoundaryKind = BoundaryKind.FILESYSTEM,
@@ -134,7 +143,7 @@ def _render_boundary_error(
 _CLI_CAUGHT_ERRORS = (DoctreeBoundaryError, OSError, UnicodeError, json.JSONDecodeError)
 
 
-def _boundary_guarded(
+def _boundary_guarded(  # ---- 3
     default_boundary: BoundaryKind = BoundaryKind.FILESYSTEM,
     *,
     preserve_snapshot: bool = False,
@@ -165,7 +174,7 @@ def _print_account(drive: GoogleDriveManager) -> int:
     return 0
 
 
-def cmd_auth(_args: argparse.Namespace) -> int:
+def cmd_auth(_args: argparse.Namespace) -> int:  # ---- 4
     """Google OAuth 2.0 인증(token.json 생성·갱신) 후 계정 대시보드를 출력한다."""
     console.print("\n[bold cyan]🔑 Google Drive OAuth 2.0 인증[/bold cyan]", soft_wrap=True)
     drive = build_drive()
@@ -181,12 +190,12 @@ def cmd_status(_args: argparse.Namespace) -> int:
     return _print_account(build_drive())
 
 
-def now_kst() -> datetime:
+def now_kst() -> datetime:  # ---- 5
     """한국 표준시(KST, UTC+9)가 붙은 현재 시각 (테스트에서 바꿔 끼운다)."""
     return datetime.now(KST)
 
 
-def _resolve_snapshot_records(
+def _resolve_snapshot_records(  # ---- 6
     snapshot: Path | None,
     snapshots_dir: Path,
     *,
@@ -206,7 +215,7 @@ def _resolve_snapshot_records(
 
 
 @_boundary_guarded(BoundaryKind.TAXONOMY)
-def cmd_classify(args: argparse.Namespace) -> int:
+def cmd_classify(args: argparse.Namespace) -> int:  # ---- 7
     """고정 분류표로 로컬 스냅샷을 검토하여 터미널에 출력한다. Drive 인증·조회는 수행하지 않는다."""
     catalog = load_catalog(args.category_tree, args.content_map)
     records = _resolve_snapshot_records(args.snapshot, Path(SNAPSHOTS_DIR))
@@ -217,7 +226,7 @@ def cmd_classify(args: argparse.Namespace) -> int:
 
 
 @_boundary_guarded(BoundaryKind.FILESYSTEM, preserve_snapshot=True)
-def cmd_update(args: argparse.Namespace) -> int:
+def cmd_update(args: argparse.Namespace) -> int:  # ---- 8
     """조회 → 분류 → 점검 → snapshots/YYYY-MM-DD.json 저장 및 터미널 요약 출력."""
     snapshots_dir = Path(args.snapshots_dir or SNAPSHOTS_DIR)
     category_tree_path = Path(args.category_tree or CATEGORY_TREE_FILE)
@@ -230,7 +239,7 @@ def cmd_update(args: argparse.Namespace) -> int:
     records = drive.list_pdf_files()
     if not records:
         raise DriveListError(
-            "드라이브에서 PDF를 0개 조회했습니다. 빈 스냅샷을 막기 위해 중단합니다 (폴더 ID·권한 확인).",
+            "드라이브에서 PDF를 0개 조회했습니다. 빈 스냅샷을 막기 위해 중단합니다 (폴더 ID·권한 확인).",  # ---- 9
             preserve_snapshot=True,
         )
 
@@ -243,7 +252,7 @@ def cmd_update(args: argparse.Namespace) -> int:
         api_key=VIRUSTOTAL_API_KEY or None,
         cache_path=VT_CACHE_FILE,
     )
-    if vt_flagged and args.strict:
+    if vt_flagged and args.strict:  # ---- 10
         flagged_names = ", ".join(r.get("name", r.get("id", "")) for r, _ in vt_flagged)
         raise SecurityAuditError(
             f"VirusTotal 위협 감지 {len(vt_flagged)}건: {flagged_names}",
@@ -270,7 +279,7 @@ def cmd_update(args: argparse.Namespace) -> int:
 
 
 @_boundary_guarded(BoundaryKind.FILESYSTEM)
-def cmd_audit(args: argparse.Namespace) -> int:
+def cmd_audit(args: argparse.Namespace) -> int:  # ---- 11
     """드라이브 스냅샷(SHA-256) 및 로컬 contents/*.pdf 보안·무결성 점검을 수행한다."""
     snapshots_dir = Path(args.snapshots_dir or SNAPSHOTS_DIR)
     api_key = args.vt_api_key if args.vt_api_key is not None else (VIRUSTOTAL_API_KEY or None)
@@ -312,7 +321,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 
 @_boundary_guarded(BoundaryKind.TAXONOMY)
-def cmd_layout(args: argparse.Namespace) -> int:
+def cmd_layout(args: argparse.Namespace) -> int:  # ---- 12
     """프로젝트 레이아웃 프로필(config/project_layout_profiles.yaml)을 CLI로 조회 및 원자적 수정한다."""
     layout_path = Path(args.file or PROJECT_LAYOUT_PROFILES_FILE)
     if args.layout_action == "get":
@@ -357,7 +366,7 @@ def _resolve_cache_file(args: argparse.Namespace, snapshots_dir: Path) -> Path:
 
 
 @_boundary_guarded(BoundaryKind.FILESYSTEM)
-def cmd_sync(args: argparse.Namespace) -> int:
+def cmd_sync(args: argparse.Namespace) -> int:  # ---- 13
     """Step 1: 드라이브 스냅샷(SHA-256)과 로컬 워크스페이스 contents/(SHA-256)의 3-Way 정합성을 판별한다."""
     snapshots_dir = Path(args.snapshots_dir or SNAPSHOTS_DIR)
     ws_dir = Path(args.workspace_dir or WORKSPACE_DIR)
@@ -376,7 +385,7 @@ def cmd_sync(args: argparse.Namespace) -> int:
 
 
 @_boundary_guarded(BoundaryKind.FILESYSTEM)
-def cmd_pull(args: argparse.Namespace) -> int:
+def cmd_pull(args: argparse.Namespace) -> int:  # ---- 14
     """Step 1: 드라이브 스냅샷에서 도서를 찾아 특정 로컬 프로젝트의 contents/(및 하위 경로) 폴더로 내려받는다."""
     snapshots_dir = Path(args.snapshots_dir or SNAPSHOTS_DIR)
     ws_dir = Path(args.workspace_dir or WORKSPACE_DIR)
@@ -405,7 +414,7 @@ def cmd_pull(args: argparse.Namespace) -> int:
 
 
 @_boundary_guarded(BoundaryKind.TAXONOMY)
-def cmd_scaffold(args: argparse.Namespace) -> int:
+def cmd_scaffold(args: argparse.Namespace) -> int:  # ---- 15
     """Step 2: 로컬 프로젝트를 지정한 레이아웃 프로필(handcrafted/toolchain) 구조로 강제 생성 및 보정한다."""
     layout_path = Path(args.file or PROJECT_LAYOUT_PROFILES_FILE)
     if args.check:
@@ -451,7 +460,7 @@ def _discover_parse_targets(target: Path) -> list[Path]:
 
 
 @_boundary_guarded(BoundaryKind.TAXONOMY)
-def cmd_parse(args: argparse.Namespace) -> int:
+def cmd_parse(args: argparse.Namespace) -> int:  # ---- 16
     """Step 3: PDF를 페이지별 마크다운·크롭 PNG·Graphviz DOT SVG로 파싱하고 원본 동일성을 검증한다."""
     pdfs = _discover_parse_targets(Path(args.target))
     has_warnings = False
@@ -518,7 +527,7 @@ def _run_practice_generation(args: argparse.Namespace) -> None:
 
 
 @_boundary_guarded(BoundaryKind.TAXONOMY)
-def cmd_practice(args: argparse.Namespace) -> int:
+def cmd_practice(args: argparse.Namespace) -> int:  # ---- 17
     """Step 4: content_data/<도서명>/ 중간 결과물을 조합해 practice/<도서명>/<장>/<절>/ 실습 코드를 생성하거나 검증(--check)한다."""
     if args.check:
         check_target = Path(args.practice_dir) if args.practice_dir else Path(args.target)
@@ -539,7 +548,7 @@ def cmd_practice(args: argparse.Namespace) -> int:
 
 
 @_boundary_guarded(BoundaryKind.TAXONOMY)
-def cmd_snippet(args: argparse.Namespace) -> int:
+def cmd_snippet(args: argparse.Namespace) -> int:  # ---- 18
     """실습 코드(practice/) 내 [[snippet]] / @snippet 추출, 인간 검증(--verify) 및 마크다운·블로그 내보내기를 수행한다."""
     project_dir = Path(args.path).resolve()
     today_str = now_kst().strftime("%Y-%m-%d")
@@ -918,7 +927,7 @@ def _register_layout_subparsers(
     }
 
 
-def _register_pipeline_subparsers(
+def _register_pipeline_subparsers(  # ---- 19
     subparsers: argparse._SubParsersAction,
 ) -> dict[tuple[str, ...], argparse.ArgumentParser]:
     p_sync = subparsers.add_parser(
@@ -1074,7 +1083,7 @@ def _register_snippet_subparser(
     return {("snippet",): p_snippet}
 
 
-def build_parser() -> argparse.ArgumentParser:
+def build_parser() -> argparse.ArgumentParser:  # ---- 20
     parser = argparse.ArgumentParser(
         prog="doctree",
         description=_ROOT_DESCRIPTION,
@@ -1100,7 +1109,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:  # ---- 21
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
@@ -1119,3 +1128,66 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+# ======== 노트 ========
+# 1 Drive 클라이언트 생성
+#   설명: 기존 credentials.json/token.json 경로를 그대로 쓰므로 재로그인이 필요 없다. 자격 증명의 내용은 이 모듈에서 읽지 않는다.
+#   관련: src/doctree/drive_sync/drive_pdf_fetcher.py, backlog/decisions/decision-2
+# 2 경계 예외 렌더링
+#   설명: 모든 경계 예외를 '❌ <접두사>: <상세>' 한 형식과 종료 코드 1로 맞춘다. preserve_snapshot이면 기존 스냅샷을 그대로 뒀다고 알린다.
+#   관련: src/doctree/runtime_env/boundary_errors.py
+# 3 명령 핸들러 가드 데코레이터
+#   설명: OSError, UnicodeError, JSON 오류와 경계 예외를 잡아 _render_boundary_error로 보낸다. 명령마다 기본 경계(TAXONOMY/FILESYSTEM)를 인자로 정한다.
+# 4 auth 명령
+#   설명: 브라우저 OAuth 로그인으로 token.json을 만들거나 갱신한다. 수동 실행 전용이다.
+#   관련: backlog/decisions/decision-2
+# 5 시계 주입 지점
+#   설명: 현재 시각을 돌려주는 함수를 따로 둬서 테스트가 monkeypatch로 날짜를 고정한다. 스냅샷 파일 이름이 이 날짜로 정해진다.
+#   관련: src/doctree/drive_sync/snapshot_diff_tracker.py
+# 6 스냅샷 선택 규칙
+#   설명: --snapshot이 있으면 그것을, 없으면 최신 스냅샷을 쓴다. required=False(audit)일 때만 스냅샷이 없어도 빈 목록으로 진행한다.
+# 7 classify 명령
+#   설명: 오프라인 명령이다. Drive 인증·조회 없이 저장된 스냅샷과 분류표만 읽는다. --strict면 미분류가 있을 때 종료 코드 1이다.
+#   관련: src/doctree/content_taxonomy/category_classifier.py
+# 8 update 명령의 단계 순서
+#   설명: 조회 -> 분류 -> 점검 -> VT 감사 -> 스냅샷 저장 순서다. 스냅샷 저장이 맨 마지막이라 앞 단계가 실패하면 기존 스냅샷이 보존된다(preserve_snapshot=True).
+#   관련: src/doctree/drive_sync/snapshot_diff_tracker.py
+# 9 빈 스냅샷 방지
+#   설명: 조회 결과가 0건이면 오류로 중단한다. 폴더 ID나 권한 문제로 빈 목록을 받았을 때 직전 스냅샷을 빈 값으로 덮어 변경 이력을 잃는 사고를 막는다.
+#   관련: KBI-6#B2
+# 10 strict에서의 위협 처리
+#   설명: --strict일 때만 VirusTotal 위협 감지가 저장을 중단시킨다. VT API 키가 없으면 원격 조회 없이 캐시에 있는 판정만 쓴다.
+#   관련: src/doctree/pdf_threat_audit/threat_intel_client.py
+# 11 audit 명령
+#   설명: 스냅샷의 SHA-256 평판 조회와 로컬 contents/*.pdf 바이트 검사를 함께 한다. --strict면 위협 또는 손상 PDF가 하나라도 있을 때 종료 코드 1이다.
+#   관련: src/doctree/pdf_threat_audit/pdf_byte_inspector.py
+# 12 layout 명령
+#   설명: 레이아웃 프로필을 get/set/add/remove로 조회·수정한다. 수정은 검증 후 원자적으로 저장된다.
+#   관련: src/doctree/runtime_env/layout_profile_store.py
+# 13 sync 명령
+#   설명: 최신 스냅샷의 SHA-256과 로컬 */contents/*.pdf를 3-Way로 비교해 보고서를 출력한다. 로컬 해시는 캐시로 가속한다.
+#   관련: src/doctree/drive_sync/workspace_sync_engine.py
+# 14 pull 명령
+#   설명: 스냅샷에서 도서를 찾아 contents/로 내려받고 해시를 대조한다. 인증이 안 돼 있으면 DriveAuthError다.
+#   관련: src/doctree/drive_sync/workspace_sync_engine.py
+# 15 scaffold 명령(폐기 대상)
+#   설명: 프로젝트를 레이아웃 프로필 구조로 생성·보정하거나 --check로 검증한다. decision-1에서 폐기된 PDF->Markdown 파이프라인에 속하며 제거될 수 있다.
+#   관련: backlog/decisions/decision-1, src/doctree/runtime_env/project_scaffolder.py
+# 16 parse 명령(폐기 대상)
+#   설명: PDF를 페이지별 마크다운·PNG·DOT SVG로 파싱하고 원본과의 동일성을 검증한다. decision-1에서 폐기된 PDF->Markdown 파이프라인에 속하며 제거될 수 있다.
+#   관련: backlog/decisions/decision-1, src/doctree/pdf_threat_audit/pdf_page_ingestor.py
+# 17 practice 명령(폐기 대상)
+#   설명: content_data를 조합해 practice 실습 코드를 만들거나 --check로 검증한다. decision-1에서 폐기된 PDF->Markdown 파이프라인에 속하며 제거될 수 있다.
+#   관련: backlog/decisions/decision-1, src/doctree/content_taxonomy/practice_kata_builder.py
+# 18 snippet 명령
+#   설명: practice 코드의 snippet 표식을 추출·검증·내보낸다. practice 흐름에 딸린 기능이라 그 흐름이 제거되면 함께 정리 대상이 될 수 있다(decision-1, 확인 필요).
+#   관련: src/doctree/content_taxonomy/snippet_registry.py
+# 19 파이프라인 서브커맨드 등록
+#   설명: sync/pull/scaffold/parse/practice 서브파서를 등록한다. 이 중 scaffold/parse/practice는 폐기된 파이프라인의 명령이다.
+#   관련: backlog/decisions/decision-1
+# 20 파서 조립
+#   설명: 서브커맨드 그룹을 차례로 등록하고 help가 모든 하위 파서를 찾을 수 있도록 topic_parsers 표를 넘긴다.
+# 21 진입점과 종료 코드
+#   설명: pyproject의 console script `doctree`가 부르는 함수다. 각 핸들러의 정수 반환이 곧 종료 코드이며, Ctrl+C는 130이다.
+#   관련: pyproject.toml

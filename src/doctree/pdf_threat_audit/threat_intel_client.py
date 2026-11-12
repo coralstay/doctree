@@ -1,3 +1,12 @@
+# ---
+# title: threat_intel_client
+# description: 해시 평판 조회 클라이언트(VirusTotal v3)와 로컬 캐시
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """위협 인텔리전스 해시 평판 조회 클라이언트(ThreatIntelProvider Protocol · VirusTotal v3) 및 로컬 캐시."""
 from __future__ import annotations
 
@@ -32,7 +41,7 @@ __all__ = [
     "save_vt_cache",
 ]
 
-VT_API_URL = "https://www.virustotal.com/api/v3/files/{sha256}"
+VT_API_URL = "https://www.virustotal.com/api/v3/files/{sha256}"  # ---- 1
 
 
 class VerdictStatus(StrEnum):
@@ -59,7 +68,7 @@ class VtVerdict:
 
 
 @runtime_checkable
-class ThreatIntelProvider(Protocol):
+class ThreatIntelProvider(Protocol):  # ---- 2
     """해시 기반 위협 인텔리전스 조회 프로바이더 구조적 서브타이핑 인터페이스 (PEP 544)."""
 
     __slots__ = ()
@@ -110,7 +119,7 @@ def _parse_cached_verdict(sha: Any, item: Any) -> VtVerdict | None:
     )
 
 
-def load_vt_cache(cache_path: PathLike) -> dict[str, VtVerdict]:
+def load_vt_cache(cache_path: PathLike) -> dict[str, VtVerdict]:  # ---- 3
     p = Path(cache_path)
     if not p.is_file():
         return {}
@@ -154,7 +163,7 @@ def _extract_analysis_stats(body: dict[str, Any]) -> dict[str, int]:
     }
 
 
-def query_virustotal_hash(sha256: str, api_key: str, timeout: float = 10.0) -> VtVerdict:
+def query_virustotal_hash(sha256: str, api_key: str, timeout: float = 10.0) -> VtVerdict:  # ---- 4
     """VirusTotal API v3에서 SHA-256 해시 평판을 조회한다 (파일 업로드 없음)."""
     norm_sha = sha256.strip().lower()
     body, code, detail = execute_json_http_get(
@@ -191,7 +200,7 @@ def query_virustotal_hash(sha256: str, api_key: str, timeout: float = 10.0) -> V
     )
 
 
-def check_hashes_with_vt(
+def check_hashes_with_vt(  # ---- 5
     sha256_list: Iterable[str],
     api_key: str | None,
     cache_path: PathLike | None = None,
@@ -224,7 +233,7 @@ def check_hashes_with_vt(
     return results
 
 
-def audit_drive_records(
+def audit_drive_records(  # ---- 6
     records: Iterable[dict],
     api_key: str | None,
     cache_path: PathLike | None = None,
@@ -245,7 +254,7 @@ def audit_drive_records(
     return len(verdicts), flagged
 
 
-def audit_local_pdfs(
+def audit_local_pdfs(  # ---- 7
     roots: Iterable[PathLike],
     api_key: str | None = None,
     cache_path: PathLike | None = None,
@@ -277,3 +286,26 @@ def audit_local_pdfs(
             )
         )
     return audits
+
+
+# ======== 노트 ========
+# 1 VirusTotal 조회 URL
+#   설명: 파일을 업로드하지 않고 SHA-256 해시로만 평판을 묻는 v3 엔드포인트다. API 키는 환경 변수(VIRUSTOTAL_API_KEY)로만 받고 코드·로그에 남기지 않는다.
+#   관련: .env.example
+# 2 프로바이더 계약
+#   설명: query_hash 하나만 요구하는 Protocol이다. VirusTotal 외의 서비스나 테스트용 가짜 구현을 같은 자리에 꽂을 수 있다.
+#   개념: structural typing(Protocol)
+# 3 손상 캐시는 빈 캐시
+#   설명: 캐시 파일이 없거나 읽기·JSON 오류면 예외 없이 빈 사전으로 시작한다. 캐시는 재생성 가능한 가속 장치이기 때문이다.
+# 4 판정 매핑
+#   설명: 악성 탐지 수가 0 초과면 MALICIOUS, 의심이 0 초과면 SUSPICIOUS, 아니면 CLEAN. 404는 NOT_FOUND, 그 외 실패는 ERROR다.
+#   관련: src/doctree/runtime_env/boundary_errors.py (execute_json_http_get)
+# 5 캐시 우선 조회
+#   설명: 캐시에 있고 ERROR가 아닌 판정은 재사용하고, 나머지만 프로바이더에 묻는다. ERROR는 캐시하지 않아 다음 실행에서 재시도된다. 프로바이더도 API 키도 없으면 원격 조회 없이 캐시만 쓴다.
+#   개념: 캐시 우선(read-through)
+# 6 스냅샷 해시 감사
+#   설명: MALICIOUS/SUSPICIOUS만 flagged로 돌려준다. 반환하는 첫 값은 판정을 얻은 해시 수다.
+#   관련: src/doctree/doctree_cli/command_dispatcher.py (cmd_update, cmd_audit)
+# 7 로컬 PDF 감사
+#   설명: 해시 계산, 바이트 검사, 평판 조회를 합쳐 파일당 LocalPdfAudit를 만든다.
+#   관련: src/doctree/pdf_threat_audit/pdf_byte_inspector.py

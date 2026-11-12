@@ -1,3 +1,12 @@
+# ---
+# title: test_category_classifier
+# description: 고정 분류 트리와 드라이브 ID 배정표 분류의 오프라인 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """Offline checks for the fixed taxonomy and explicit Drive-ID assignments."""
 
 import unicodedata

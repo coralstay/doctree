@@ -1,3 +1,12 @@
+# ---
+# title: test_threat_intel_client
+# description: VirusTotal 해시 평판 클라이언트와 캐시의 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """VirusTotal API v3 해시 평판 조회 클라이언트 및 캐시(doctree.pdf_threat_audit.threat_intel_client) 단위·통합 테스트."""
 import hashlib
 import io

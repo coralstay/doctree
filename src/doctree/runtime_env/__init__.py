@@ -1,3 +1,12 @@
+# ---
+# title: runtime_env/__init__
+# description: runtime_env 도메인의 공개 API를 지연 import로 노출하는 패키지 초기화
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """runtime_env 도메인: 런타임 환경 변수·경로 설정, 레이아웃 프로필 저장소, 스캐폴더 및 경계 예외 계층."""
 from __future__ import annotations
 
@@ -5,7 +14,7 @@ from types import MappingProxyType
 
 from doctree.runtime_env.workspace_settings import resolve_lazy_attribute
 
-_EXPORTS = MappingProxyType({
+_EXPORTS = MappingProxyType({  # ---- 1
     "BoundaryKind": "boundary_errors",
     "DoctreeBoundaryError": "boundary_errors",
     "DriveAuthError": "boundary_errors",
@@ -42,10 +51,19 @@ __all__ = list(_EXPORTS)
 
 
 def __getattr__(name: str):
-    return resolve_lazy_attribute(__name__, globals(), _EXPORTS, name)
+    return resolve_lazy_attribute(__name__, globals(), _EXPORTS, name)  # ---- 2
 
 
 def __dir__() -> list[str]:
     return sorted({*globals(), *__all__})
 
 
+
+
+# ======== 노트 ========
+# 1 지연 로딩 수출표
+#   설명: 공개 이름 -> 하위 모듈 이름 표. 패키지를 import해도 하위 모듈은 이름에 처음 접근할 때만 로드한다.
+#   관련: src/doctree/runtime_env/workspace_settings.py (resolve_lazy_attribute)
+#   개념: PEP 562 모듈 __getattr__, 지연 import
+# 2 __getattr__ 위임
+#   설명: 해석 로직은 workspace_settings.resolve_lazy_attribute 한 곳에 있고, 다른 도메인 __init__도 같은 함수를 쓴다.

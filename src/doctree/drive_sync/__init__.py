@@ -1,3 +1,12 @@
+# ---
+# title: drive_sync/__init__
+# description: drive_sync 도메인의 공개 API를 지연 import로 노출하는 패키지 초기화
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """drive_sync 도메인: 구글 드라이브 PDF 메타데이터 수집, 스냅샷 비교 및 로컬 동기화 엔진."""
 from __future__ import annotations
 

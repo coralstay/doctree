@@ -1,3 +1,12 @@
+# ---
+# title: project_scaffolder
+# description: 프로젝트 디렉토리·필수 파일·실행 스크립트·gitignore 구조를 강제로 생성한다 (폐기된 PDF 파이프라인 잔재)
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """로컬 워크스페이스 프로젝트 디렉토리·필수 파일·실행 스크립트·gitignore 구조 강제 생성기 (Step 2: doctree scaffold)."""
 from __future__ import annotations
 
@@ -34,7 +43,7 @@ class ScaffoldResult:
     preserved_files: tuple[str, ...]
 
 
-_FILE_TEMPLATES: Final[Mapping[str, str]] = MappingProxyType({
+_FILE_TEMPLATES: Final[Mapping[str, str]] = MappingProxyType({  # ---- 1
     "README.md": """\
 # {project_name}
 
@@ -247,7 +256,7 @@ def _read_gitignore_lines(gitignore_path: Path) -> tuple[bool, str, set[str]]:
     return existed, text, lines
 
 
-def _ensure_gitignore_entries(
+def _ensure_gitignore_entries(  # ---- 2
     gitignore_path: Path,
     required_entries: list[str],
 ) -> tuple[bool, tuple[str, ...]]:
@@ -297,7 +306,7 @@ def _ensure_profile_directories(
     return tuple(created_dirs), tuple(existing_dirs)
 
 
-def scaffold_project(
+def scaffold_project(  # ---- 3
     profile: str,
     target_dir: PathLike,
     *,
@@ -352,7 +361,7 @@ def scaffold_project(
     )
 
 
-def verify_project_scaffold(
+def verify_project_scaffold(  # ---- 4
     profile: str,
     target_dir: PathLike,
     *,
@@ -378,3 +387,17 @@ def verify_project_scaffold(
     )
 
     return len(missing) == 0, tuple(missing)
+
+
+# ======== 노트 ========
+# 1 스캐폴드 파일 템플릿
+#   설명: required_files 이름 -> 본문 문자열. scripts/*.sh는 실습 실행·채점·리셋·역추적·스니펫 도구를 만드는 템플릿이다. 문자열 안의 '# ...' 줄은 생성될 파일의 내용이지 이 모듈의 주석이 아니다.
+#   관련: backlog/decisions/decision-1 - 이 모듈은 폐기된 PDF 파이프라인(backlog/decisions/decision-1)에 속하며 제거될 수 있다.
+# 2 gitignore 보강
+#   설명: 슬래시 변형(/x, x/, /x/)을 같은 규칙으로 보고, 누락된 항목만 덧붙인다. 기존 규칙은 지우지 않는다.
+# 3 scaffold 진입점
+#   설명: 프로필 규격대로 디렉토리, 필수 파일, gitignore를 만든다. 이미 있는 파일은 overwrite가 아니면 보존하고 .sh 파일에만 실행 권한을 보강한다.
+#   관련: backlog/decisions/decision-1 - 이 모듈은 폐기된 PDF 파이프라인(backlog/decisions/decision-1)에 속하며 제거될 수 있다.
+#   개념: 멱등(idempotent) 생성
+# 4 scaffold 검증(--check)
+#   설명: 파일을 만들지 않고 규격 충족 여부만 검사해 누락 목록(dir:/file:/gitignore: 접두사)을 돌려준다.

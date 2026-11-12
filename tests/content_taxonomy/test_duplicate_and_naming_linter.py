@@ -1,3 +1,12 @@
+# ---
+# title: test_duplicate_and_naming_linter
+# description: 중복·파일명 점검 린터의 단위 테스트
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """중복·파일명 점검 단위 테스트."""
 import copy
 import inspect

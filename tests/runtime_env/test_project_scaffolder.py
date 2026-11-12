@@ -1,3 +1,12 @@
+# ---
+# title: test_project_scaffolder
+# description: 프로젝트 스캐폴더와 doctree scaffold 명령의 테스트 (폐기된 파이프라인)
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """프로젝트 구조 스캐폴딩 생성기(project_scaffolder.py) 및 `doctree scaffold` CLI 단위·통합 테스트."""
 from __future__ import annotations
 

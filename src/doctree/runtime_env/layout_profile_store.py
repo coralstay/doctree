@@ -1,3 +1,12 @@
+# ---
+# title: layout_profile_store
+# description: 프로젝트 레이아웃 프로필 YAML의 스키마 검증과 원자적 입출력 저장소
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """프로젝트 레이아웃 프로필(config/project_layout_profiles.yaml) 스키마 검증, 공통 YAML 검증기 및 원자적 입출력 저장소."""
 from __future__ import annotations
 
@@ -39,7 +48,7 @@ __all__ = [
 ]
 
 
-class _UniqueKeySafeLoader(yaml.SafeLoader):
+class _UniqueKeySafeLoader(yaml.SafeLoader):  # ---- 1
     """YAML 기본 안전 타입을 유지하면서 중복 키 덮어쓰기를 ClassificationError로 차단한다."""
 
     __slots__ = ()
@@ -68,15 +77,12 @@ ALL_PROFILE_FIELDS: Final[frozenset[str]] = frozenset(SCALAR_FIELDS + LIST_FIELD
 REQUIRED_PROFILE_FIELDS: Final[frozenset[str]] = frozenset(LIST_FIELDS)
 OUTPUT_FORMATS: Final[tuple[str, ...]] = ("yaml", "json", "lines")
 
-# 프로필별로 CLI가 반드시 생성해야 하는 최상위 디렉토리 (YAML 편집으로 제거 불가).
-# handcrafted: 기준 모델 handcrafted-cpp — 도서는 contents/<도서명>/에 위치한다.
-# 이 목록 외의 디렉토리는 사용자가 `doctree layout add`로 명시적으로 추가하기 전까지 생성·삭제하지 않는다.
-MANDATORY_PROFILE_DIRECTORIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType({
+MANDATORY_PROFILE_DIRECTORIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType({  # ---- 2
     "handcrafted": ("content_data", "contents", "practice", "scripts", "tips", ".opensource"),
 })
 
 
-def read_strict_yaml(path: PathLike) -> Any:
+def read_strict_yaml(path: PathLike) -> Any:  # ---- 3
     """중복 키를 허용하지 않는 안전 YAML 로더(_UniqueKeySafeLoader)로 설정 파일을 읽는다."""
     target = Path(path)
     try:
@@ -173,7 +179,7 @@ def validate_unique_item(
     seen.add(normalized)
 
 
-def _validate_safe_relative_path(value: Any, location: str) -> str:
+def _validate_safe_relative_path(value: Any, location: str) -> str:  # ---- 4
     """프로젝트 루트 내부의 안전한 상대 경로인지 검증한다 (절대 경로·상위 디렉터리 탈출 '..'·단독 '.'·빈 세그먼트·역슬래시·제어문자 차단)."""
     text = validate_nonempty_str(value, location)
     if (
@@ -241,7 +247,7 @@ def _validate_mandatory_directories(profile_name: str, profile: Mapping[str, Any
         )
 
 
-def validate_layout_profiles(data: Any, location: str = "project_layout_profiles.yaml") -> dict[str, Any]:
+def validate_layout_profiles(data: Any, location: str = "project_layout_profiles.yaml") -> dict[str, Any]:  # ---- 5
     """레이아웃 프로필 YAML 문서를 검증하고 NFC 정규화된 사전을 반환한다."""
     root = validate_mapping_keys(
         data,
@@ -283,7 +289,7 @@ def load_layout_profiles(path: PathLike) -> dict[str, Any]:
     return validate_layout_profiles(raw, str(target))
 
 
-def save_layout_profiles(data: dict[str, Any], path: PathLike) -> Path:
+def save_layout_profiles(data: dict[str, Any], path: PathLike) -> Path:  # ---- 6
     """레이아웃 프로필 데이터를 검증한 뒤 임시 파일(.tmp) + replace로 원자적으로 저장한다."""
     target = Path(path)
     validated = validate_layout_profiles(data, str(target))
@@ -344,7 +350,7 @@ def format_layout_value(value: Any, fmt: str = "yaml") -> str:
     return yaml.safe_dump(value, allow_unicode=True, sort_keys=False)
 
 
-def _load_and_prepare_mutation(
+def _load_and_prepare_mutation(  # ---- 7
     path: PathLike,
     profile: str,
     field: str,
@@ -448,3 +454,25 @@ def remove_layout_items(
     data["profiles"][norm_profile][norm_field] = updated
     save_layout_profiles(data, path)
     return updated
+
+
+# ======== 노트 ========
+# 1 YAML 중복 키 차단
+#   설명: PyYAML 기본 동작은 중복 키를 마지막 값으로 조용히 덮어쓴다. 설정 오타가 묻히지 않도록 construct_mapping에서 ClassificationError로 막는다.
+#   개념: SafeLoader 서브클래싱
+# 2 필수 최상위 디렉토리
+#   설명: 프로필별로 CLI가 반드시 생성해야 하는 최상위 디렉토리이며 YAML 편집으로 제거할 수 없다. handcrafted는 기준 모델 handcrafted-cpp이고 도서는 contents/<도서명>/에 둔다. 이 목록 밖의 디렉토리는 사용자가 `doctree layout add`로 명시적으로 추가하기 전까지 생성·삭제하지 않는다.
+#   관련: src/doctree/runtime_env/project_scaffolder.py
+# 3 엄격 YAML 읽기 진입점
+#   설명: 모든 설정 YAML(레이아웃, 분류 트리)이 이 함수를 지나 중복 키 검사를 받는다.
+#   관련: src/doctree/content_taxonomy/category_classifier.py
+# 4 경로 탈출 차단
+#   설명: 절대 경로, '..', 단독 '.', 빈 세그먼트, 역슬래시, 제어문자를 거부해 프로필 값이 프로젝트 루트 밖을 가리키지 못하게 한다.
+#   개념: path traversal
+# 5 프로필 문서 검증
+#   설명: 최상위 키, schema_version==1, 프로필 이름 식별자, 중복 프로필, 필수 디렉토리를 차례로 검증하고 NFC 정규화된 사전을 돌려준다. 저장 전에도 같은 검증을 다시 통과해야 한다.
+# 6 원자적 저장
+#   설명: 검증을 통과한 데이터만 atomic_write_text로 쓴다. 헤더 주석 한 줄을 붙여 safe_dump하므로 사용자가 YAML에 적은 주석은 저장 때 사라진다.
+#   관련: src/doctree/runtime_env/workspace_settings.py
+# 7 set/add/remove 공통 전처리
+#   설명: 수정 명령 세 개가 같은 검증을 공유한다. 등록되지 않은 프로필, 목록 전용 액션에 스칼라 필드, 빈 입력을 여기서 모두 막는다.

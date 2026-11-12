@@ -1,3 +1,12 @@
+# ---
+# title: practice_kata_builder
+# description: content_data 중간 결과물에서 실습·테스트 프레임워크(practice/)를 생성한다 (폐기된 PDF 파이프라인 잔재)
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """중간 결과물(content_data/<도서명>/*page.md)을 장·절·주제별로 묶어 실습·테스트 프레임워크(practice/)를 생성하는 빌더 (Step 4: doctree practice)."""
 from __future__ import annotations
 
@@ -201,7 +210,7 @@ def _parse_page_number(raw_page: Any, default: int = 1) -> int:
     return default
 
 
-def _load_content_index(content_dir: Path) -> dict[str, Any]:
+def _load_content_index(content_dir: Path) -> dict[str, Any]:  # ---- 1
     index_path = content_dir / "index.json"
     if not content_dir.is_dir() or not index_path.is_file():
         raise ClassificationError(
@@ -286,7 +295,7 @@ def _group_toc_by_chapter_and_section(
     return grouped
 
 
-def _read_safe_markdown_file(c_dir: Path, md_name: str) -> str | None:
+def _read_safe_markdown_file(c_dir: Path, md_name: str) -> str | None:  # ---- 2
     """c_dir 내부의 안전한 마크다운 파일이면 본문 문자열을 반환하고, 경로 탈출이나 미존재 시 None을 반환한다."""
     norm_md = normalize_nfc(md_name)
     safe_name = Path(norm_md).name if norm_md.isprintable() and "\\" not in norm_md else ""
@@ -399,7 +408,7 @@ def _build_pitfalls_markdown(
     )
 
 
-def _build_single_kata_package(
+def _build_single_kata_package(  # ---- 3
     ctx: _KataBuildContext,
     ch_slug: str,
     sec_slug: str,
@@ -459,7 +468,7 @@ def _build_single_kata_package(
     return kata_dir
 
 
-def build_practice_katas(
+def build_practice_katas(  # ---- 4
     content_data_dir: PathLike,
     *,
     practice_root: PathLike | None = None,
@@ -634,7 +643,7 @@ def _backfill_single_kata_dir(
     return wrote_any
 
 
-def backfill_practice_pitfalls(
+def backfill_practice_pitfalls(  # ---- 5
     target_dir: PathLike,
     *,
     lang: str | None = None,
@@ -671,7 +680,7 @@ def _check_single_kata_dir(kata_dir: Path, practice_root: Path) -> list[str]:
     return missing
 
 
-def verify_practice_katas(target_dir: PathLike) -> tuple[bool, tuple[str, ...]]:
+def verify_practice_katas(target_dir: PathLike) -> tuple[bool, tuple[str, ...]]:  # ---- 6
     """practice/ 하위 모든 실습(Kata) 폴더가 4대 표준 파일(README.md, PITFALLS.md, main.*, test.*)을 갖췄는지 검증한다."""
     root = Path(target_dir).resolve()
     practice_root = root / "practice" if (root / "practice").is_dir() else root
@@ -684,3 +693,24 @@ def verify_practice_katas(target_dir: PathLike) -> tuple[bool, tuple[str, ...]]:
         missing.extend(_check_single_kata_dir(k_dir, practice_root))
     return len(missing) == 0, tuple(missing)
 
+
+
+# ======== 노트 ========
+# 1 content_data 색인 검증
+#   설명: index.json의 pages(비어 있지 않은 객체 목록)와 toc(있으면 객체 목록)를 확인한다. content_data는 폐기된 PDF->Markdown 변환의 산출물이다.
+#   관련: backlog/decisions/decision-1 - 이 모듈은 폐기된 PDF 파이프라인의 실습(practice) 단계에 속하며(backlog/decisions/decision-1) 제거될 수 있다.
+# 2 경로 탈출 방지 읽기
+#   설명: 파일명이 디렉터리 부분을 가지거나 '.', '..'면 None을 돌려 content_dir 밖을 읽지 못하게 한다.
+#   개념: path traversal
+# 3 kata 패키지 하나 생성
+#   설명: 한 절(section)의 페이지 마크다운에서 개념·함정(PITFALL/CAVEAT)·DOT·코드 블록을 뽑아 DOT 다이어그램(SVG)과 main/test 템플릿을 만든다.
+#   관련: backlog/decisions/decision-1 - 이 모듈은 폐기된 PDF 파이프라인의 실습(practice) 단계에 속하며(backlog/decisions/decision-1) 제거될 수 있다.
+# 4 practice 생성 진입점
+#   설명: content_data/<도서>/index.json의 목차를 장/절로 묶어 practice/<도서>/<장>/<절>/ 패키지를 만든다. `doctree practice` 명령이 부른다.
+#   관련: src/doctree/doctree_cli/command_dispatcher.py (cmd_practice), backlog/decisions/decision-1 - 이 모듈은 폐기된 PDF 파이프라인의 실습(practice) 단계에 속하며(backlog/decisions/decision-1) 제거될 수 있다.
+# 5 함정 노트 보충
+#   설명: 이미 만들어진 practice의 말단 kata 폴더를 찾아 빠진 pitfalls를 다시 채운다(overwrite 옵션이 있다).
+#   관련: backlog/decisions/decision-1 - 이 모듈은 폐기된 PDF 파이프라인의 실습(practice) 단계에 속하며(backlog/decisions/decision-1) 제거될 수 있다.
+# 6 practice 검증(--check)
+#   설명: 표준 실습 파일의 존재 여부만 검사해 누락 목록을 돌려준다. kata 폴더가 하나도 없으면 실패다.
+#   관련: backlog/decisions/decision-1 - 이 모듈은 폐기된 PDF 파이프라인의 실습(practice) 단계에 속하며(backlog/decisions/decision-1) 제거될 수 있다.

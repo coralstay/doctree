@@ -1,3 +1,12 @@
+# ---
+# title: workspace_sync_engine
+# description: 드라이브 스냅샷과 로컬 contents/ 를 SHA-256으로 3-Way 비교하고 도서를 가져오는(pull) 동기화 엔진
+# authors: [coralstay]
+# license: AGPL-3.0-only
+# status: draft
+# created_date: '2026-11-06'
+# updated_date: '2026-11-06'
+# ---
 """구글 드라이브 스냅샷(SHA-256) ⟷ 로컬 워크스페이스 contents/(SHA-256) 고속 스캔·3-Way 비교 및 도서 가져오기(pull) 엔진."""
 from __future__ import annotations
 
@@ -136,7 +145,7 @@ def discover_workspace_content_dirs(workspace_dir: PathLike) -> list[Path]:
     )
 
 
-def scan_workspace_contents(
+def scan_workspace_contents(  # ---- 1
     workspace_dir: PathLike,
     *,
     cache_path: PathLike | None = None,
@@ -228,7 +237,7 @@ def _group_local_by_sha(
     return local_by_sha, local_without_sha
 
 
-def compare_drive_and_local(
+def compare_drive_and_local(  # ---- 2
     drive_records: Iterable[Record],
     local_entries: Iterable[LocalPdfEntry],
     *,
@@ -329,7 +338,7 @@ def _raise_if_ambiguous_or_return_single(
     return None
 
 
-def resolve_drive_record_for_pull(records: Iterable[Record], query: str) -> dict:
+def resolve_drive_record_for_pull(records: Iterable[Record], query: str) -> dict:  # ---- 3
     """사용자 질의(file_id, sha256, 파일명 또는 제목 키워드)로 스냅샷에서 단일 도서 레코드를 찾는다."""
     norm_q = normalize_nfc(query).strip()
     if not norm_q:
@@ -400,7 +409,7 @@ def _clean_filename_candidate(raw: str | None) -> str:
     return "".join(ch if ch.isprintable() else " " for ch in translated).strip()
 
 
-def _sanitize_pdf_filename(output_name: str | None, fallback_name: str) -> str:
+def _sanitize_pdf_filename(output_name: str | None, fallback_name: str) -> str:  # ---- 4
     """출력 파일명에서 경로 구분자와 위험 문자를 제거하고 .pdf 확장자를 보장한다."""
     raw_filename = _clean_filename_candidate(output_name) or _clean_filename_candidate(fallback_name)
     safe_stem = normalize_nfc(_LEADING_DOT_OR_SPACE_RE.sub("", raw_filename))
@@ -410,7 +419,7 @@ def _sanitize_pdf_filename(output_name: str | None, fallback_name: str) -> str:
     return safe_stem if safe_stem.lower().endswith(".pdf") else f"{safe_stem}.pdf"
 
 
-def _parse_safe_path_segments(raw_path: str, error_label: str) -> tuple[str, ...]:
+def _parse_safe_path_segments(raw_path: str, error_label: str) -> tuple[str, ...]:  # ---- 5
     """슬래시(/)로 구분된 상대 경로 문자열의 모든 세그먼트가 안전한지 검증해 튜플로 반환한다."""
     norm = normalize_nfc(raw_path).strip().strip("/")
     if not norm or not norm.isprintable() or "\\" in norm:
@@ -421,7 +430,7 @@ def _parse_safe_path_segments(raw_path: str, error_label: str) -> tuple[str, ...
     return parts
 
 
-def _resolve_pull_target_dir(
+def _resolve_pull_target_dir(  # ---- 6
     ws: Path,
     project: str,
     subdir: str | None = None,
@@ -445,7 +454,7 @@ def _resolve_pull_target_dir(
     return ws.joinpath(project_root, "contents", *inline_sub, *extra_sub)
 
 
-def pull_drive_pdf_to_project(
+def pull_drive_pdf_to_project(  # ---- 7
     drive: Any,
     records: Iterable[Record],
     query: str,
@@ -482,7 +491,7 @@ def pull_drive_pdf_to_project(
 
     if expected_sha256:
         actual_sha = hashlib.sha256(data).hexdigest()
-        if actual_sha != expected_sha256:
+        if actual_sha != expected_sha256:  # ---- 8
             raise DriveListError(
                 f"다운로드한 파일의 SHA-256 해시가 스냅샷과 일치하지 않습니다 ({actual_sha} != {expected_sha256})."
             )
@@ -493,3 +502,26 @@ def pull_drive_pdf_to_project(
         scan_workspace_contents(ws, cache_path=cache_path)
 
     return rec, dest_path
+
+
+# ======== 노트 ========
+# 1 해시 캐시 고속 스캔
+#   설명: 상대 경로 + size + mtime_ns가 같으면 저장된 SHA-256을 재사용하고 아니면 다시 계산한다. 수백 권 PDF를 매번 해시하지 않기 위한 장치이며, 캐시는 스캔마다 현재 파일 기준으로 새로 쓴다.
+#   관련: snapshots/.local_contents_cache.json (git 제외)
+#   개념: 캐시 무효화(size+mtime)
+# 2 SHA-256 3-Way 대조
+#   설명: 파일명이 아니라 해시로 드라이브 전용 / 로컬 전용 / 양쪽 일치를 가른다. 해시가 없는 항목은 항상 한쪽 전용으로 분류해 오탐 일치를 만들지 않는다.
+#   개념: 3-Way 비교
+# 3 도서 식별 우선순위
+#   설명: 파일 ID -> SHA-256 -> 정확한 파일명 -> 키워드 순으로 찾고, 단계마다 2건 이상이면 ClassificationError로 파일 ID 지정을 요구한다. 모호한 질의로 엉뚱한 책을 받지 않기 위함이다.
+# 4 출력 파일명 정화
+#   설명: 경로 구분자와 위험 문자를 제거하고, 앞의 점·공백과 의미 없는 이름('.pdf', '-')을 거부한다. 그 결과로만 .pdf 확장자를 보장한다.
+# 5 안전한 상대 경로 세그먼트
+#   설명: 빈 세그먼트, '.', '..', 역슬래시, 비출력 문자를 거부해 --subdir로 워크스페이스 밖에 쓰지 못하게 한다.
+#   개념: path traversal
+# 6 pull 대상 폴더 결정
+#   설명: 하위 경로를 따로 주지 않으면 도서 파일명과 같은 contents/<도서명>/ 디렉터리를 쓴다.
+# 7 pull 진입점
+#   설명: 스냅샷에서 레코드를 찾아 내려받은 뒤 스냅샷의 SHA-256과 대조하고, 일치할 때만 원자적으로 저장한 다음 해시 캐시를 갱신한다.
+# 8 무결성 대조
+#   설명: 다운로드 바이트의 SHA-256이 스냅샷 값과 다르면 파일을 쓰지 않고 중단한다(손상·변조 방지).
